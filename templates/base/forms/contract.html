@@ -1,0 +1,155 @@
+{% if contract_form %}
+<section id="page">
+	<script>
+	
+		$(document).ready(function() {
+			var add_user_buttons = $("#add-new-contact, #add-new-billing-contact");
+
+			add_user_buttons.click(function() {
+				var button = $(this);
+				var wrapper = $(this).parent();
+
+
+				button.addClass("hidden");
+				wrapper.find(".new-user-form").removeClass("hidden");
+				wrapper.find(".user-search").addClass("hidden");
+
+				wrapper.find(".back").click(function() {
+					button.removeClass("hidden");
+					wrapper.find(".new-user-form").addClass("hidden");
+					wrapper.find(".user-search").removeClass("hidden");
+				});
+			});
+
+			// show contract id if existing
+			var contract_id_field = $("#id_number");
+			var contract_id = contract_id_field.val();
+			if (typeof contract_id != "undefined" && contract_id != "") {
+				contract_id_field.parent().prepend(contract_id);
+			}
+
+			//show and set billing contact if recently created
+			var user_id = $("#id_id").attr("value");
+			if (typeof user_id != "undefined" && user_id != "") {
+				var select_options = $("#id_billing_contact").find("option");
+				select_options.attr('selected', false);
+				$.each(select_options, function(key, option) {
+					var option = $(option);
+					var value = option.val();
+					if (value == user_id) {
+						var wrapper = option.parent().parent();
+						option.attr('selected', true);
+						//wrapper.css("display", "block");
+						//wrapper.html("<div class=\"hidden\">" + wrapper.html() + "</div>");
+						//wrapper.prepend("<label>Rechnungsadresse:</label><input type=\"text\" value=\"" + option.text() + "\"readonly=\"readonly\"/>");
+
+						return false;
+					}
+				});
+			}
+
+			var selected_billing_options = $("#id_billing_contact").find("option:selected");
+			show_select_option(selected_billing_options, null, "Vertragspartner", 'id_billing_contact');
+
+			// show contact if set 
+			var selected_options = $("#id_contact").find("option:selected");
+			show_select_option(selected_options, null, "Schüler", 'id_contact');
+
+			function show_select_option(selected_options, value, label, id) {
+				$.each(selected_options, function(key, option) {
+					var option = $(option);
+					var wrapper = option.parent().parent();
+					var text = "";
+					var newID = "target_" + id
+					var errorDiv = wrapper.find(".error");
+
+					wrapper.css("display", "block");
+					wrapper.html("<div class=\"hidden\">" + wrapper.html() + "</div>");
+
+					if (typeof value != "undefined" && value != null && value != "") {
+						text = value;
+					}
+					else {
+						if (option.text() != "---------") {
+							text = option.text();
+							$.cookie(id, text);
+						}
+					}
+
+					//wrapper.prepend(errorDiv[0].outerHTML + "<label>" + label + ":</label><input id=\"" + newID + "\" type=\"text\" value=\"" + text + "\"readonly=\"readonly\"/>");
+				});
+			}
+		});
+
+	</script>
+	<style>
+		.right #user-id {
+			display: none;
+		}
+	</style>
+
+	<div>
+		<form action="{{ form_action }}" method="post" data-default-action="{{ request.get_full_path }}">
+			<section class="two-col">
+	
+				<div class="left">
+					<h3>Schüler</h3>
+	
+					<div class="user-search">
+						<label for="search-user">Benutzer Suchen</label>
+						<input type="text" name="search-user" id="add-contract-contact" class="search-user" />
+						<div class="results"></div>
+					</div>
+				</div>
+	
+				<div class="right">
+					<h3>Rechnungskontakt</h3>
+					{% if show_new_user %}
+						<div class="button" id="add-new-billing-contact">Rechnungskontakt +</div>
+	
+						<div class="user-search">
+							<label for="search-user">Benutzer Suchen</label>
+							<input type="text" name="search-user" id="add-contract-billing-contact" class="search-user" />
+							<div class="results"></div>
+						</div>
+	
+						<div class="hidden new-user-form">
+							<div class="button back">zurück zur Benutzersuche</div>
+							{% include 'base/forms/person_for_contract.html' %}
+						</div>
+					{% else %}
+						{% include 'base/forms/person_for_contract.html' %}
+					{% endif %}
+				</div>
+			</section>
+
+			<div style="margin: 0 0 0 0; width: 100%;">
+				<h3>Vertragsdaten</h3>
+				<div class="form-field">
+					{% csrf_token %}
+				</div>
+				{% for field in contract_form %}
+					<div class="form-field">
+						{% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+						<label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+						{{ field }}
+					</div>
+				{% endfor %}
+				<div class="form-field">
+					<input class="button" type="submit" value="Speichern" />
+				</div>
+			</div>
+
+			<div class="user-search-values hidden">
+				{% for user in all_users %}
+					<div data-cat="{% for category in user.category.all %}{{ category.name }}{% endfor %}" data-id="{{ user.pk }}" class="search-value user button" data-name="{{ user.first_name }} {{ user.last_name }}">
+						{{ user.first_name }} {{ user.last_name }}
+					</div>
+				{% endfor %}
+			</div>
+		</form>
+	</div>
+{% else %}
+	<h1>nope</h1>
+{% endif %}
+</section>

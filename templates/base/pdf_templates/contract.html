@@ -1,0 +1,28 @@
+{% if contracts %}
+		{% for contract in contracts %}
+			<dl class="contract">
+				<dt>{{ contract.number }}</dt>
+				<dd>Typ: {{ contract.type }}</dd>
+				<dd>Beginn: {{ contract.start_date }}</dd>
+				<dd>Ende: {{ contract.end_date }}</dd>
+				<dd>Teilnehmer: {{ contract.contact }}</dd>
+				<dd>Vertragspartner: {{ contract.billing_contact }}</dd>
+				<dd>Rabatt: {{ contract.discount }}</dd>
+				<dd>Preis: {{ contract.calc_price }}</dd>
+	
+				{% if contract.pdfs %}
+					<dd>
+						PDFs:
+						<ul>
+							{% for pdf in contract.pdfs %}
+								<li><a href="{{ pdf.path }}">{{ pdf.name }}</a> <button>Delete</button></li>
+							{% endfor %}
+						</ul>
+					</dd>
+				{% endif %}
+			</dl>
+			
+		{% endfor %}
+	{% else %}
+		<button>Vertragspdf erstellen</button>
+	{% endif %}

@@ -1,0 +1,40 @@
+from django.shortcuts import render
+from _todo.forms import Todo_Form
+from django.template import RequestContext, loader
+from django.http import HttpResponse
+from _todo.models import Todo
+
+def handle_todo(request, todo_id=None):
+	form_type = "todo"
+	form = Todo_Form()
+	template = loader.get_template('base/placeholder.html')	
+	print "~~~~~~~~~~~~ HANDLE TODO ~~~~~~~~~~~~"
+
+	
+	if request.method == 'POST':
+		try:
+			todo = Todo.objects.get(pk=todo_id)
+			form = Todo_Form(request.POST, instance=todo)
+		except:		
+			form = Todo_Form(request.POST)
+
+		if form.is_valid():
+			form.save()
+			return HttpResponseRedirect('/calendar')
+			print "todo saved"
+		else:
+			print "todo not saved"
+	elif todo_id != None:
+		try:
+			todo = Todo.objects.get(pk=todo_id)
+			form = Todo_Form(instance=todo)
+		except:		
+			print "error could not find todo for id " + str(todo_id)
+
+	context = RequestContext(request, {
+		'form': form,
+		"form_type"   : form_type,
+	})
+	
+
+	return HttpResponse(template.render(context))

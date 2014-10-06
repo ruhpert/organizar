@@ -1,0 +1,96 @@
+
+<!-- 
+<body>
+	<section id="print">
+			<div class="box">
+				<h3>Stunden drucken</h3>
+				<p>Geben Sie hier den Tag an von welchem Sie die Stunden drucken möchten.</p>
+				<p>Nach dem Absenden ("klick" auf Termine anzeigen) ganz normal auf Drucken klicken oder "Strg" + "d" drücken.</p>
+				<p></p>
+				<p></p>
+				<form action="/print/" method="post">
+					{% csrf_token %}
+					<div class="form-field">
+						<label for="date">Datum</label><input type="text" id="date" name="date" />
+						<input type="submit" value="Termine anzeigen">
+					</div>
+				</form>
+			</div>
+
+			<div class="box">
+				<h3>Schüler Liste drucken</h3>
+				<p></p>
+				<form action="/print/" method="post">
+					{% csrf_token %}
+					<div class="form-field">
+						<input type="hidden" name="print-users" value="True" />
+						<input type="submit" value="Schüler Liste anzeigen">
+					</div>
+				</form>
+			</div>
+
+			<div class="box">
+				<h3>Vertrag drucken</h3>
+				<p></p>
+	
+				<form action="/print/" method="post">
+					{% csrf_token %}
+					<div class="search">
+						<div class="form-field">
+							<input id="trigger-contract-search" type="text" value="Suche" style="padding: 3px;" />
+							<div id="contract-search-results" class="search-results"></div>
+							<div id="contract-search-values" class="search-values">
+								{% for contract in contracts %}
+									<div data-type="{{ contract.type }}" data-id="{{ contract.pk }}" draggable="true" class="search-value contract button">
+										VNr: {{ contract.number }}<br/>
+										Person: {{ contract.contact.first_name }} {{  contract.contact.last_name }} <br/>
+										Vertragsart: {{ contract.type }}<br/>
+										Zeit: {{ contract.start_date }} bis {{ contract.end_date }}<br/>
+									</div>
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+					{% if contracts %}
+						<div class="form-field">
+							<select id="id_contract" name="id_contract">
+								<option value="">----------------------</option>
+								{% for contract in contracts %}
+									<option value="{{ contract.pk }}">{% if contract.number %}{{ contract.number }}{% endif %}{{ contract.contact.first_name }} {{  contract.contact.last_name }}</option>
+								{% endfor %}
+							</select>
+						</div>
+					{% endif %}
+					<br/>
+					<div class="form-field">
+						<input type="hidden" name="print-contract" value="True" />
+						<input type="submit" value="Vertrag drucken">
+					</div>
+				</form>
+			</div>
+
+			<div class="box">
+				<h3>Stundenplan drucken</h3>
+				<p></p>
+	
+				<form action="./" method="post">
+					<div class="form-field">
+						{% csrf_token %}
+						{% if users %}
+							Benutzer: 
+							<select name="user">
+							{% for user in users %}
+								<option value="{{user.id}}">{{ user.username }}</option>
+							{% endfor %}
+							</select>
+						{% endif %}
+						<br/>
+						<input type="hidden" name="print-calendar" value="True" />
+						<input type="submit" value="Stundenplan anzeigen">
+					</div>
+				</form>
+			</div>
+	</section>
+</body>
+</html>
+ -->

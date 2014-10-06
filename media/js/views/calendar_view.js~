@@ -1,0 +1,80 @@
+var Calendar_View = (function(_this, $) {
+
+
+
+
+
+	$(document).ready(function() {
+		console.log("CALENDAR VIEW READY");
+		//console.log("MAKING AJAX REQUEST");
+		//var events = AJAX.post("/",event_data);
+		//var output = Mustache.render("{{title}} spends {{calc}}", event_data);
+		//console.log(output);
+	
+		var cal_nav = $("#cal-nav");
+		console.log("Calendar_View ", Calendar_View);
+		if (typeof ALL_EVENTS != "undefined" && ALL_EVENTS != null && $(ALL_EVENTS).size() > 0) {
+			cal_nav.fadeIn();
+			Calendar_Model.init();
+		}
+		else {
+			cal_nav.fadeOut();
+		}
+
+	});
+
+	_this.day_entinty = '<div class="day-entity">{{ time }}</div>';
+
+
+	_this.template_event = 
+		'<li class="event clear {{ date }} {{ category_small }}" data-room="{{ room }}" data-date="{{ date_as_utc }}">' +
+			'<div class="visible-data">' +
+				'<h5 class="time" style="color: black; font-size: 16px;">{{ start_time }} bis {{ end_time }}</h5>' +
+				'<h4>{{ lead }} <br/>{{ lead_phone }} {{ lead_mobile }}</h4>' +
+				'<b>{{ date }}</b><br/>' +
+				'<span><b>Fach:</b> {{ category }}<br/>' +
+				'<b>Raum:</b> {{ room }}</span><br/>' +
+				'<b>Schüler</b><br/>' +
+				'{{#user_list}}' +
+						'<span class="user-data">{{#person_absent}}<s><b>{{/person_absent}}{{ user_name }},{{#person_absent}}</b></s>{{/person_absent}} </span>'+
+				'{{/user_list}}' +
+			'</div>' +
+			'<div class="hidden-data hidden {{ category_small }}">' +
+				'<div class="data clear">' +
+					'<h4 class="time" style="color: black;"> {{ start_time }} bis {{ end_time }} </h4><h5>{{ date }}</h5>' +
+					'<span><b>Lehrer:</b> {{ lead }}' +
+					'<a class="button" href="/person/edit/{{ lead_id }}/">'+
+						'<img src="/media/img/edit.png" alt="edit"/>'+
+					'</a>'+
+					'<br/><b>Fach:</b> {{ category }}<br/><b>Raum:</b> {{ room }} <br/>' +
+					'<ul class="users">' +
+					'{{#user_list}}' +
+						'<li>'+
+							'<span class="user-data">{{ user_name }} <br/> {{ user_phone }}</span>'+
+							'<a class="button" href="/person/edit/{{ user_id }}/">'+
+								'<img src="/media/img/edit.png" alt="edit"/>'+
+							'</a>' +
+							'<a class="button {{#comment}}active{{/comment}} comment" href="/add_user_comment/{{ id }}/{{ user_id }}/">'+
+								'<img src="/media/img/comment.png" alt="edit"/>'+
+								'<div class="hidden-comment hidden">{{comment}}</div>'+
+							'</a>'+
+							'<a class="button {{#person_absent}}active red{{/person_absent}} comment" href="/user_not_participating/{{ id }}/{{ user_id }}/">'+
+								'<img src="/media/img/not-participating.png" alt="abwesend"/>'+
+							'</a>'+
+						'</li>'+
+					'{{/user_list}}' +
+					'</ul>'+
+					'<div class="menu">'+
+						'<a class="button" href="/event/{{ id }}/edit/">Stunde <img src="/media/img/edit.png" alt="edit"/></a>' +
+						'<a class="button delete" href="/event/{{ id }}/delete/">Stunde <img src="/media/img/delete.png" alt="delete"/></a>' +
+						'{{#event_group}}' +
+						'<a class="button clear" href="edit/group/{{ event_group }}/{{ id }}/">Serie <img src="/media/img/edit.png" alt="edit"/></a>' +
+						'<a class="button delete" href="delete/group/{{ event_group }}/">Serie <img src="/media/img/delete.png" alt="delete"/></a>' +
+						'{{/event_group}}' +
+					'</div>' +
+				'</div>' +
+			'</div>' + 
+		'</li>';
+
+	return _this;
+}({}, jQuery));

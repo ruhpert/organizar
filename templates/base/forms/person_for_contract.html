@@ -1,0 +1,43 @@
+{% if form_user %}
+	<div class="form-field">
+	{{form_user.id}}
+	</div>
+	<div class="form-field">
+		{% for pk, group in form_user.groups.field.widget.choices %}
+			<label for="id_group_{{ pk }}" class="button">
+				<input {% for group in selected_groups.all %}{% if group.pk == pk %}checked="checked"{% endif %}{% endfor %} type="checkbox" id="id_group_{{ pk }}" value="{{ pk }}" name="groups" />
+				<span>{{group}}</span>
+			</label>	
+		{% endfor %}
+	</div>
+
+	<div class="form-field">
+		{{ form_user.username.errors }}
+		<label for="id_lead">Benutzername:</label>
+		{{ form_user.username }}
+	</div>
+	<div class="form-field">
+		{{ form_user.first_name.errors }}
+		<label for="id_lead">Vorname:</label>
+		{{ form_user.first_name }}
+	</div>
+	<div class="form-field">
+		{{ form_user.last_name.errors }}
+		<label for="id_lead">Nachname:</label>
+		{{ form_user.last_name }}
+	</div>
+	<div class="form-field">
+		{{ form_user.email.errors }}
+		<label for="id_field">E-Mail:</label>
+		{{ form_user.email }}
+	</div>
+{% endif %}
+{% if form_person %}
+	{% for field in form_person %}
+		<div class="form-field">
+			{% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+			<label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+			{{ field }}
+		</div>
+	{% endfor %}
+{% endif %}

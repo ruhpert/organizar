@@ -1,0 +1,49 @@
+<div>	
+	<script>
+		$("document").ready(function() {
+			var label = null;
+			var value = null;
+
+			var start_date = $("#id_start_date");
+			label = start_date.parent().find("label");
+			value = "{{ start_date | date:'d.m.Y' }}";
+			label.text(label.text() + " " + value);
+
+			var end_date = $("#id_end_date");
+			label = end_date.parent().find("label");
+			value = "{{ end_date | date:'d.m.Y' }}";
+			label.text(label.text() + " " + value);
+
+// 			$("#edit-event-form").submit(function(e) {
+// 				var input_end_date = $("#id_end_date");
+// 				console.log("input_end_date ", input_end_date);
+// 				console.log("input_end_date.attr value " , input_end_date.attr("value"));
+// 				if (typeof input_end_date == "undefined" || input_end_date.attr("value") == "" || input_end_date.attr("value") == " ") {
+// 					e.preventDefault();
+// 					input_end_date.addClass("error");
+
+// 					return false;
+// 				}
+// 			});
+		});
+	</script>
+	<form id="edit-event-form" action="./" method="post">
+		{% csrf_token %}
+
+		{% if form %}
+			{% for field in form %}
+				<div class="form-field {{ field.label }}">
+					{% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+					<label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+					{{ field }}
+				</div>
+			{% endfor %}
+
+			<div class="form-field">
+				<input class="button" type="submit" value="Speichern" />
+			</div>
+		{% else %}
+			<a href="javascript:history.back()" class="button">zurück</a>
+		{% endif %}
+	</form>
+</div>

@@ -1,0 +1,95 @@
+<!--
+<form action="{{ form_action }}" method="POST">
+	{% csrf_token %}
+	{{ form.non_field_errors }}
+	<div class="form-field">
+		{{ form.id }}
+	</div>
+	<div class="form-field">
+		{{ form.username.errors }}
+		<label for="id_username">Benutzername</label>
+		{{ form.username }}
+	</div>
+	<div class="form-field">
+		{{ form.first_name.errors }}
+		<label for="id_first_name">Vorname</label>
+		{{ form.first_name }}
+	</div>
+	<div class="form-field">
+		{{ form.last_name.errors }}
+		<label for="id_last_name">Nachname</label>
+		{{ form.last_name }}
+	</div>
+	<div class="form-field">
+		{{ form.email.errors }}
+		<label for="id_email">Email</label>
+		{{ form.email }}
+	</div>
+
+	<div class="form-field">
+		{{ form.is_active.errors }}
+		<label for="id_is_active">Aktiv</label>
+		{{ form.is_active }}
+	</div>
+
+	<p><input class="button" type="submit" value="Absenden" /></p>
+</form>-->
+<style>
+	#id_user {display: none;}
+</style>
+<div>
+	<form action="./" method="post">
+		{% csrf_token %}
+		{% if form %}
+			<div class="form-field">
+				{% for pk, group in form.groups.field.widget.choices %}
+					<label for="id_group_{{ pk }}" class="button">
+						<input {% for group in selected_groups.all %}{% if group.pk == pk %}checked="checked"{% endif %}{% endfor %} type="checkbox" id="id_group_{{ pk }}" value="{{ pk }}" name="groups" />
+						<span>{{group}}</span>
+					</label>	
+
+				{% endfor %}   
+			</div>
+		{% endif %}
+		{{ form.id }}
+		<div class="form-field">
+			{{ form.username.errors }}
+			<label for="id_lead">Benutzername:</label>
+			{{ form.username }}
+		</div>
+		<div class="form-field">
+			{{ form.first_name.errors }}
+			<label for="id_lead">Vorname:</label>
+			{{ form.first_name }}
+		</div>
+		<div class="form-field">
+			{{ form.last_name.errors }}
+			<label for="id_lead">Nachname:</label>
+			{{ form.last_name }}
+		</div>
+		<div class="form-field">
+			{{ form.email.errors }}
+			<label for="id_field">E-Mail:</label>
+			{{ form.email }}
+		</div>
+		{% if form_person %}
+			{% for field in form_person %}
+				<div class="form-field">
+				    {% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+				    <label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+				    {{ field }}
+				</div>
+			{% endfor %}
+		{% endif %}
+		{% if form_billing_contract %}
+			{% for field in form_billing_contract %}
+				<div class="form-field">
+				    {% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+				    <label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+				    {{ field }}
+				</div>
+			{% endfor %}
+		{% endif %}
+		<input class="button" type="submit" value="Speichern" />
+	</form>
+</div>

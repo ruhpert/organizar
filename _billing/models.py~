@@ -1,0 +1,155 @@
+# coding=UTF-8
+
+from django.db import models
+from _user.models import Billing_Contact
+import datetime
+from datetime import timedelta
+from django.contrib.auth.models import User
+from calendar import monthrange
+import traceback
+import sys 
+
+class Frequency(models.Model):
+	frequency = models.IntegerField(max_length=1, blank=True, null=True)
+
+	def __unicode__(self):
+		return str(self.frequency)
+
+	class Meta:
+		verbose_name = "Teilnamehäufigkeit"
+		verbose_name_plural = "Teilnamehäufigkeiten"
+
+
+class Contract_Type(models.Model):
+	name = models.CharField(max_length=200)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Vertrags Art"
+		verbose_name_plural = "Vertrags Arten"
+
+
+class Charge(models.Model):
+	charge = models.DecimalField("Kosten / Stunde", max_digits=5, decimal_places=2, blank=True, null=True)
+
+	def __unicode__(self):
+		return str(self.charge * 4)
+
+	class Meta:
+		verbose_name = "Preis"
+		verbose_name_plural = "Preise"
+		ordering = ('charge')
+
+class Duration(models.Model):
+	duration = models.DecimalField("Dauer / Minuten", max_digits=5, decimal_places=2, blank=True, null=True)
+
+	def __unicode__(self):
+		return str(self.duration)
+
+	class Meta:
+		verbose_name = "Dauer"
+		verbose_name_plural = "Dauer"
+
+
+class Discount(models.Model):
+	discount = models.CharField("Rabatt", max_length=200)
+	name = models.CharField("Name", max_length=200)
+
+	def __unicode__(self):
+		return str(self.name) + " " + str(self.discount) + "%"
+
+	class Meta:
+		verbose_name = "Rabatt"
+		verbose_name_plural = "Rabatte"
+
+
+class Contract(models.Model):
+	number = models.CharField("Vertragsnummer", max_length=200)
+	type = models.ForeignKey(Contract_Type)
+	start_date = models.DateField("Start Date", default=datetime.date.today)
+	end_date = models.DateField("End Date", default=datetime.date.today)
+	charge = models.ForeignKey(Charge)
+	contact = models.ForeignKey(User,related_name='contract_contact')
+	billing_contact = models.ForeignKey(User,related_name='contract_billing_contact')
+	duration = models.ForeignKey(Duration)
+	frequency = models.ForeignKey(Frequency)
+	discount = models.ManyToManyField(Discount, blank=True, null=True, related_name='contract_discounts')
+
+	def __unicode__(self):
+		return self.number
+
+
+	def get_frequency_per_week(self):
+		return self.frequency.frequency / 4
+
+	def calc_price(self):
+		x = None
+		try:
+			x = float(self.frequency.frequency) * float(self.charge.charge)
+		except:
+			traceback.print_exc(file=sys.stdout)		
+
+		return float(x)
+
+	def get_discounts(self):
+		discounts = []
+		try:
+			x = self.calc_price()
+
+			if x != None:
+				for discount in self.discount.all():	
+					discount_data = {}
+					d = x * (float(discount.discount)/100)
+					discount_data["amount"] = float(d)
+					discount_data["name"] = discount.name
+					discount_data["discount"] = discount.discount
+					discounts.append(discount_data)
+		except:
+			traceback.print_exc(file=sys.stdout)	
+
+		print discounts
+
+		return discounts
+
+
+	def calc_summ(self):
+		summ = None
+		registration_fee = 39
+
+		try:
+			summ = self.calc_price() + registration_fee
+			discounts = self.get_discounts()
+
+			for discount in discounts:
+				summ = summ - discount["amount"]
+		except:
+			traceback.print_exc(file=sys.stdout)	
+
+		return summ
+
+	def calc_summ_without_fee(self):
+		registration_fee = 39
+		summ = self.calc_summ()
+		summ = summ - registration_fee
+
+		return summ
+
+	def calc_month_difference(self):
+		d1 = self.start_date
+		d2 = self.end_date 
+		delta = 0
+
+    		while True:
+       			mdays = monthrange(d1.year, d1.month)[1]
+        		d1 += timedelta(days=mdays)
+        		if d1 <= d2:
+            			delta += 1
+        		else:
+            			break
+    		return delta
+
+	class Meta:
+		verbose_name = "Vertrag"
+		verbose_name_plural = "Verträge"

@@ -1,0 +1,54 @@
+<div class="handle-user">
+	<button class="button back">Hauptmenü</button>
+	<br/><br/>
+	<h3 class="message">{{ message }}</h3>
+	<script>
+	$("document").ready(function() {
+		var handle_user = $(".handle-user");
+		var button_cash_payer = handle_user.find(".button.cash-payer");
+
+		button_cash_payer.click(function() {
+			var _data = {'load' : 'cash-payer', "csrfmiddlewaretoken":csrf_token};
+			var button = $(this);
+			var messageTarget = $("#handle_user .message");
+			var message = "Die Barzahler werden geladen...";
+			Infobox.showMessage(message);
+			$.ajax({
+				url: "/handle_cash_payer/",
+				type: "POST",
+				data: _data, 
+			}).done(function( data ) {
+				data = $(data).filter('.cash-payers');
+				console.log("~ request done");
+				console.log("data ", data);
+				Overlay.showData(data);
+				Infobox.hide();
+			}).fail(function() {
+				Infobox.showMessage("Technischer Fehler: Bitte versuchen sie es noch einmal.");
+			}).always(function() {
+				console.log( "complete" );
+			});
+		});
+	});
+	</script>
+	<div id="menu" class="menu">
+		<ul class="entries">
+			<li class="entry"><a class="button" href="/person/new/0/"><p>Benutzer hinzufügen</p></a></li>
+		</ul>
+		<div class="search clearfix">
+			<h4>Benutzer suchen:</h4>
+			<input class="trigger-search" type="text" value="Suche" style="padding: 3px;" autocomplete="off" />
+			<div class="search-results"></div>
+			<div class="search-values">
+				{% for user in all_users  %}
+					<div data-cat="" data-id="{{ user.pk }}" draggable="true" class="search-value user button">
+						<span class="text">{{ user.first_name }} {{ user.last_name }}</span>
+					</div>
+				{% endfor %}
+			</div>
+			<div class="users-list">
+			</div>
+		</div>
+	</div>
+
+</div>

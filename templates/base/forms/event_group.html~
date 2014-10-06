@@ -1,0 +1,25 @@
+{% if form %}
+	<div>	
+		<script>
+			$("document").ready(function() {
+				var start_date = $("#id_start_date");
+				var label = start_date.parent().find("label");
+				var value = "{{ start_date | date:'d.m.Y' }}";
+				start_date.attr("value", value);
+				console.log("done setting date ");
+				label.text(label.text() + " " + value);
+
+				{% if add %}
+					start_date.hide();
+				{% endif %}
+				
+			});
+		</script>
+		<form action="./" method="post">
+			
+			{% csrf_token %}
+			{{ form.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+{% endif %}

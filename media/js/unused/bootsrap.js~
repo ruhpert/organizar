@@ -1,0 +1,5 @@
+$(document).ready(function() {
+
+	Search_Model.init();
+
+});

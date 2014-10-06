@@ -1,0 +1,230 @@
+@import "config.less";
+
+body {
+	font-family: "Arial", "sans-serif";
+	letter-spacing: 0px;
+	font-size: 28px;
+	line-height: 32px;
+	background: #fff;
+	color: @black;
+	padding: 10px;
+}
+
+a {
+	color: @dark-gray;
+
+	img {
+		border: none;
+	}
+
+	&:hover {
+		color: @blue;
+	}
+}
+
+p {
+	padding: 0.4em;
+}
+
+h1, h2, h3 {
+	color: @black;
+}
+
+h5 {
+	font-size: 1em;
+	line-height: 1.3em;
+}
+
+table {
+	border: none;
+	border-collapse: collapse;
+	tr {
+		td {
+			border: 1px solid black;
+			padding: 10px;
+		}
+	}
+}
+
+.new-page {
+	page-break-before: always;
+}
+
+#page {
+	width: 760px;
+	margin:0;
+}
+
+.user-list {
+	margin: 25px;
+	width: 900px;
+
+	.user {
+		font-size: 14px;
+		line-height: 20px;
+	}
+}
+
+
+.button {
+	line-height: 30px;
+
+	&.contract {
+		font-weight: normal;
+		font-size: 20px;
+		line-height: 22px;
+		text-transform: none;
+	}
+}
+
+
+.search {
+	position: relative;
+	display: inline-block;
+	float: left;
+}
+
+.search-values {
+	display: none;
+}
+
+.search-results {
+	position: absolute;
+	width: 300px;
+	height: auto;
+	top: 30px;
+	left: 0;
+
+	ul {
+		li {
+			list-style-type: none;
+			display: block !important;
+			float: left;
+		}
+	}
+}
+
+.event {
+	border: 1px solid black;
+	padding: 10px;
+	margin: 0 0 50px 0;
+	width: 100%;
+
+	.info {
+		border-bottom: 1px solid black;
+		padding: 0 0 10px 0;
+		font-size: 0.8em;
+	}
+}
+
+.bordered-box {
+	border: 1px solid @dark-gray;
+	padding: 20px;
+}
+
+.users {
+	table {
+		width: 100%;
+		
+		tr {
+			width: 100%;
+
+			td {
+				border: none;
+				border-bottom: 1px solid @black;
+				line-height: 3.3em;
+				font-size: 0.8em;
+
+				&.user-name {
+					width: 40%;
+				}
+				&.write_space {
+					width: 60%;
+				}
+			}
+		}
+	}
+}
+
+.contract {
+	position: relative;
+	width: 1000px;
+	font-size: 18px;
+	line-height: 24px;
+
+	.small {
+		font-size: 14px; 
+		line-height: 18px;
+		font-weight: bold;		
+	}
+
+	table {
+		width: 100%;
+		border: none;
+		
+		td, tr, th {
+			text-align: left;
+			border-bottom: 1px solid black;
+
+			&.border-bottom {
+				height: 40px;
+				width: 75%;
+				border-bottom: 1px solid black;
+			}
+		}	
+
+		th, td{
+			&:nth-child(n+3) {
+				text-align: right;
+			}
+		}
+	}
+
+	h3 {
+		line-height: 34px;
+		font-size: 28px;
+		padding: 20px 0 20px 0;
+	}
+
+	#logo {
+		position: absolute;
+		top: 0;
+		right : 0;
+		width: 100%;
+		height: 100px;
+		background: url("/media/img/bg-red.png");
+
+		img {height: 100px;}
+	}
+
+	.header {		
+		padding: 140px 0 0 0;
+
+		.left {
+			width: 50%;
+			float: left;
+		}
+
+		.right {
+			width: 50%;
+			float: left;
+			text-align: right;
+		}
+	}
+
+	.content {
+		margin: 40px 0 40px 0;
+	}
+
+	.sign {
+		.left {
+			width: 50%;
+			float: left;
+		}
+
+		.right {
+			width: 50%;
+			float: left;
+		}
+	}
+}

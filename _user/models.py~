@@ -1,0 +1,100 @@
+# coding: utf-8
+
+from django.db import models
+import datetime
+from django.contrib.auth.models import User
+import re
+SEX = (
+	('m', 'male'),
+	('f', 'female'),
+)
+
+class Subject(models.Model):
+	name = models.CharField(max_length=200)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Fach"
+		verbose_name_plural = "Fächer"
+
+class Grade(models.Model):
+	name = models.CharField(max_length=200)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Klasse"
+		verbose_name_plural = "Klassen"
+
+class School(models.Model):
+	name = models.CharField(max_length=200)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Schule"
+		verbose_name_plural = "Schulen"
+
+class Person(models.Model):
+	sex = models.CharField("Geschlecht", max_length=1, choices=SEX, blank=True, null=True)
+	birthday = models.DateField("Geburtstag", blank=True, null=True) # new
+	street = models.CharField("Strasse", max_length=200, blank=True, null=True)
+	hnr = models.CharField("Hausnummer", max_length=10, blank=True, null=True)
+	zip = models.IntegerField("PLZ", max_length=8, blank=True, null=True)
+	city = models.CharField("Stadt", max_length=200, blank=True, null=True)
+	country = models.CharField("Land", max_length=200, blank=True, null=True) # new
+	phone = models.CharField("Telefon", max_length=200, blank=True, null=True)
+	mobile = models.CharField("Handy", max_length=200, blank=True, null=True)
+	accessibility = models.CharField("Mögliche Termine oder Zeiten wo unmöglich gehen.", max_length=600, blank=True, null=True) # new
+	user = models.OneToOneField(User)
+
+	def __unicode__(self):
+		return str(self.mobile)
+	
+	def get_user(self):
+		return self.user
+
+	class Meta:
+		verbose_name = "Benutzer"
+		verbose_name_plural = "Benutzer"
+
+class Child_Contact(models.Model):
+	grade = models.ForeignKey(Grade, blank=True, null=True) # new
+	school = models.ForeignKey(School, blank=True, null=True) # new
+	person = models.OneToOneField(Person)
+
+	def __unicode__(self):
+		return self.child.street
+
+	class Meta:
+		verbose_name = "Schüler"
+		verbose_name_plural = "Schüler"
+
+class Billing_Type(models.Model):
+	name = models.CharField(max_length=200)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Rechnungstyp"
+		verbose_name_plural = "Rechnungstypen"
+
+class Billing_Contact(models.Model):
+	knr = models.CharField(max_length=200, blank=True, null=True)
+	blz = models.CharField(max_length=200, blank=True, null=True)
+	iban = models.CharField(max_length=200, blank=True, null=True)
+	iban = models.CharField(max_length=200, blank=True, null=True)
+	billing_type = models.ForeignKey(Billing_Type, blank=True, null=True)
+	person = models.OneToOneField(Person)
+
+	def __unicode__(self):
+		return self.person.user.name
+
+	class Meta:
+		verbose_name = "Rechnungsadresse"
+		verbose_name_plural = "Rechnungsadressen"

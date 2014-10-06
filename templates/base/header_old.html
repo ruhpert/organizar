@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<title>Schüler Verwaltung</title>
+
+		<link rel="stylesheet" href="/media/js/lib/fullcalendar/fullcalendar.css"/>
+                <link rel="stylesheet" href="/media/js/lib/fullcalendar/fullcalendar.print.css" /media="print" />
+                <link rel="stylesheet" href="/media/css/core.css" />
+
+                <!--link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css"-->
+
+                <script type="text/javascript" src="/media/js/lib/jquery-1.8.2.min.js"></script>
+                <script type="text/javascript" src="/media/js/lib/jquery-ui-1.10.2.custom.min.js"></script>
+                <script type="text/javascript" src="/media/js/lib/zepto.js"></script>
+                <script type="text/javascript" src="/media/js/lib/mustache.js"></script>
+				<script type="text/javascript" src="/media/js/lib/jquery.cookie.js"></script>
+				<script type="text/javascript" src="/media/js/models/ajax_model.js"></script>
+				<script type="text/javascript" src="/media/js/views/calendar_event.js"></script>
+                <script type="text/javascript" src="/media/js/globals.js"></script>
+                <script type="text/javascript" src="/media/js/slider.js"></script>
+                <script type="text/javascript" src="/media/js/module.overlay.js"></script>
+                <script type="text/javascript" src="/media/js/module.infobox.js"></script>
+                <script type="text/javascript" src="/media/js/module.buttonEvents.js"></script>
+                <script type="text/javascript" src="/media/js/calendar.js"></script>
+                <script type="text/javascript" src="/media/js/autocomplete.js"></script>
+                <script type="text/javascript" src="/media/js/lib/fullcalendar/fullcalendar.js"></script>
+                <script type="text/javascript" src="/media/js/lib/fullcalendar/jquery-ui-1.10.2.custom.min.js"></script>
+                <script type="text/javascript" src="/media/js/brain.js"></script>
+                <script>
+                    var csrf_token = "{% csrf_token %}";
+                    function csrfSafeMethod(method) {
+						// these HTTP methods do not require CSRF protection
+						return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+					}
+					$.ajaxSetup({
+						crossDomain: false, // obviates need for sameOrigin test
+						beforeSend: function(xhr, settings) {
+							if (!csrfSafeMethod(settings.type)) {
+								xhr.setRequestHeader("X-CSRFToken", csrf_token);
+							}
+						}
+					});
+				</script>
+				{% csrf_token %}
+	</head>
+

@@ -1,0 +1,40 @@
+# coding=UTF-8
+
+from django.db import models
+from django.contrib.auth.models import User
+from _calendar.models import Event
+
+class Todo_Category(models.Model):
+	name = models.CharField("Name", max_length=2000)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Todo Kategorie"
+		verbose_name_plural = "Todo Kategorien"
+
+class Todo_Priority(models.Model):
+	name = models.CharField("Name", max_length=2000)
+
+	def __unicode__(self):
+		return self.name
+
+	class Meta:
+		verbose_name = "Todo Priorität"
+		verbose_name_plural = "Todo Priorität"
+
+class Todo(models.Model):
+	text = models.CharField("Text", max_length=2000)
+	users = models.ManyToManyField(User, blank=True, null=True, related_name='users_of_todo')
+	event = models.ForeignKey(Event, blank=True, null=True)
+	done = models.NullBooleanField(blank=True, null=True)
+	category = models.ForeignKey(Todo_Category)
+	priority = models.ForeignKey(Todo_Priority)
+
+	def __unicode__(self):
+		return self.text
+
+	class Meta:
+		verbose_name = "Bewertung"
+		verbose_name_plural = "Bewertungen"

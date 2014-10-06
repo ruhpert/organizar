@@ -1,0 +1,1133 @@
+# coding=UTF-8
+
+
+
+#####################################################################
+#																	#
+# AUTHOR		: robert.eisele@organizar.de			 			#
+# YEAR			: 2014						  						#
+# COPYRIGHT BY	: organizar gbr					  					#
+# 								  									#
+#####################################################################
+
+
+
+#################
+#				#
+# IMPORTS 		#
+#				#
+#################
+
+from datetime import datetime, timedelta, date
+import json
+import logging
+import random
+import sys
+import traceback
+
+from django.conf import settings
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.template import RequestContext, loader
+
+from _billing.models import Contract
+from _calendar.forms import LoginForm, Event_Form, Not_At_Event_Form, Event_Person_Comment_Form, Event_Group_Form
+from _calendar.models import Event, Room, Event_Group, Category, Event_Person_Comment, Not_At_Event_Person
+from _todo.models import Todo
+from _user.models import Person
+from _utils.template_utils import set_session_var
+
+
+#################
+#				#
+# GLOBALS 		#
+#				#
+#################
+log = logging.getLogger(__name__)
+
+
+
+
+
+
+
+
+
+
+#####################################################################
+#																	#
+# DEF placeholder()													#
+#																	#
+#####################################################################
+
+@login_required(login_url='/')
+def placeholder(request, user_id=None, event_id=None, action=None):
+	print request
+
+	print ("~~~~~~~~~~~~~~~~~ placeholder ~~~~~~~~~~~~~~~~~~~")
+	print ("event_id " + str(event_id))
+	print ("user_id  " + str(user_id))
+	print ("action   " + str(action))
+
+	show_events = False
+	user = None
+	form = None
+	form_second = None
+	form_action = "../save/"
+	form_type = None
+	event = None
+	final_event_list = None
+	todos = Todo.objects.filter(done=False)[:10]
+	json_events = []
+	template = loader.get_template('base/placeholder.html')
+	persons = Person.objects.all()
+	all_users = User.objects.all()
+
+	if user_id != None and user_id.find("/") > -1:
+		id_data = user_id.split("/")
+		user_id = id_data[1]
+		event_id = id_data[2]
+
+	if action != None:
+		try:
+			
+			if event_id != None and not isinstance( event_id, str ) and str(event_id) != "new":
+				event_id = long(event_id)
+				try:
+					event = Event.objects.get(pk=event_id)
+				except:
+					print "ERROR GETTING EVENT WITH ID " + str(event_id)
+		except:
+			event = None
+
+		try:
+			if user_id != None and not isinstance( user_id, str ):
+				try:
+					user_id = int(user_id)
+					user = User.objects.get(id=user_id)
+					print "FOUND USER " + str(user)
+				except ValueError:
+					print "user id but no user" + str(user_id)
+		except:
+			user = None
+			print " NO USER"
+
+		################################################################
+		# EVENTS
+		################################################################
+		if event_id != None:
+			form_type = "event"
+
+			if action == "edit" or action == "add":
+				if action == "edit":
+					set_session_var("status_info", "Stunde bearbeiten!", request)
+				else:
+					set_session_var("status_info", "Neue Stunde anlegen!", request)
+				print "~~~~~~~ EDIT ~~~~~~~~"
+
+				if event != None:
+					print "old event"
+					form = Event_Form(instance=event)
+				else:
+					print "new event"
+					form = Event_Form(initial={'name': "test"})
+					form.fields["name"].initial = "test"
+
+				if request.method == 'POST':
+					if event != None:
+						form = Event_Form(request.POST, instance=event)
+						print "event found"
+					else:
+						form = Event_Form(request.POST)
+						print "no event found"
+					try:
+						the_event = form.save()
+						the_event.name = the_event.lead.username + " " + the_event.category.name + " raum " + str(the_event.room.id) + "; " + the_event.start_time.strftime("%H:%M") + " - " + the_event.end_time.strftime("%H:%M") + " " + the_event.date.strftime("%A")
+						the_event.save()
+
+						print "form saved"
+
+						if event == None:
+							set_session_var("status_info", "Stunde erfolgreich gespeichert!", request)
+							return HttpResponseRedirect('/event/' + str(the_event.pk) + "/edit/")
+					except:
+						print sys.exc_info()[0]
+						print "form is not valid!"
+						print traceback.format_exc()
+
+			elif action == "delete":
+				event.delete()
+				set_session_var("status_info", "Stunde erfolgreich gelöscht!", request)
+
+				return HttpResponseRedirect('/calendar')
+
+			elif action == "not-participating":
+				form = Not_At_Event_Form()
+			else:
+				form = Event_Form()
+	else:
+		show_events = True
+
+	if show_events:
+		set_session_var("status_info", "Termine werden geladen... Bitte warten...", request)
+	else:
+		set_session_var("status_info", None, request)
+
+	context = RequestContext(request, {
+		'events' : final_event_list,
+		'all_users' : all_users,
+		'persons' : persons,
+		'form': form,
+		"form_second"	: form_second,
+		"form_action"	: form_action,
+		"form_type"		: form_type,
+		"json_events"	: json.dumps(json_events),
+		"todos"			: todos,
+		"show_events"	: show_events,
+	})
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# INDEX							  	  #
+###################################################################
+
+def index(request):
+	print("~~~~~~~~~~~~~~~~~ index ~~~~~~~~~~~~~~~~~~~")
+	username = request.POST.get('email', "")
+	password = request.POST.get('password', "")
+	form = LoginForm()
+	template = "base/index.html"
+
+	if request.user.is_authenticated():
+		return HttpResponseRedirect('calendar')
+	else:
+		user = None
+		print("trying to log in...")
+
+		if request.method == 'POST':
+
+			form = LoginForm(request.POST)
+			if form.is_valid():
+				user = authenticate(username=username, password=password)
+
+				if user is not None:
+					if user.is_active:
+						try:
+							login(request, user)
+
+							return HttpResponseRedirect('calendar')
+						except:
+							print "ERROR on login"
+
+	context = RequestContext(request, {
+		'form': form,
+	})
+
+	template = loader.get_template(template)
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# DELETE GROUP							  #
+###################################################################
+
+@login_required(login_url='/')
+def delete_group(request, group_id=None):
+
+	if group_id != None:
+		group = Event_Group.objects.filter(pk=group_id)
+		events = Event.objects.filter(event_group=group)
+		group.delete()
+
+		print "deleted group " + str(group)
+
+		for event in events:
+			event.delete()
+
+	template = loader.get_template('base/placeholder.html')
+	context = RequestContext(request, {
+		'info': "group deleted",
+	})
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# MOVE DATES INTO FUTURE					  #
+###################################################################
+
+@login_required(login_url='/')
+def move_dates_one_day_into_the_future(request):
+	info = "ok"
+	all_events = Event.objects.all()
+	print "~~~~~~~~~~~~ move into future ~~~~~~~~~~~~"
+#	for event in all_events:
+#		new_date = timedelta(days=int(1)) + event.date
+#		event.date = new_date
+#		date = event.date
+#		event.date = date.replace(hour=0)
+#		start_time = event.start_time
+#		event.start_time = start_time.replace(day=1, month=1, year=1900)
+#		end_time = event.end_time
+#		event.end_time = end_time.replace(day=1, month=1, year=1900)
+#		start_time = event.start_time
+#		end_time = event.end_time
+#		start_time = timedelta(hours=int(1)) + start_time
+#		end_time = timedelta(hours=int(1)) + end_time
+#		event.start_time = start_time
+#		event.end_time = end_time
+#		event.save()
+#
+	context = RequestContext(request, {
+		'info': info,
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# EDIT GROUP							  #
+###################################################################
+
+@login_required(login_url='/')
+def edit_group(request, group_id=None, event_id=None):
+
+	user_list = None
+	group_form = None
+	form = None
+
+	if group_id != None:
+		group = Event_Group.objects.get(pk=group_id)
+		events = Event.objects.filter(event_group=group)
+
+		if event_id == None:
+			first_event = None
+		else:
+			first_event = Event.objects.get(pk=event_id)
+
+		form = Event_Form(instance=first_event)
+
+		if request.method == 'POST':
+			data = request.POST.copy()
+			name = request.POST.get("name", None)
+			start_time = request.POST.get("start_time", None)
+			end_time = request.POST.get("end_time", None)
+			room = request.POST.get("room", None)
+			users = request.POST.get("users", None)
+			category = request.POST.get("category", None)
+			lead = request.POST.get("lead", None)
+			users = request.POST.getlist("users", None)
+			date = request.POST.get("date", None)
+
+			try:
+				form = Event_Form(data=data, instance=first_event)
+			except:
+				form = Event_Form(data=data)
+
+			try:
+				user_counter = 0
+				user_list = []
+
+				for user in users:
+					try:
+						user = User.objects.get(pk=user)
+						user_list.append(user)
+					except:
+						print "could not create user " + str(user)
+						print sys.exc_info()
+						print traceback.format_exc()
+					user_counter = user_counter + 1
+
+			except:
+				print "error during user creation"
+				print sys.exc_info()
+				print traceback.format_exc()
+
+				user_list = None
+
+			try:
+				category = Category.objects.get(pk=category)
+			except:
+				category = None
+			try:
+				room = Room.objects.get(pk=room)
+			except:
+				room = None
+			try:
+				lead = User.objects.get(pk=lead)
+				print "lead = " + str(lead)
+			except:
+				lead = None
+
+			start_time = datetime.strptime(start_time, '%H:%M')#.replace(tzinfo=utc)
+			end_time  = datetime.strptime(end_time, '%H:%M')#.replace(tzinfo=utc)
+			date  = datetime.strptime(date, '%d.%m.%Y')
+			org_date = first_event.date
+			delta = date - org_date
+
+			if name != None and name != "":
+				group.name = name
+			try:
+				group.start_time = start_time
+				group.end_time = end_time
+				group.save()
+				print "group saved"
+			except:
+				print "could not save group"
+
+			for event in events:
+
+				if name != None and name != "":
+					event.name = name
+
+				try:
+					event.start_time = start_time
+					event.end_time = end_time
+				except:
+					print "could not set event time"
+
+				if room != None and room != "":
+					event.room = room
+
+				if category != None and category != "":
+					event.category = category
+
+				if lead != None and lead != "":
+					event.lead = lead
+
+				if user_list != None:
+					event.users = user_list
+
+				if date != None:
+					try:
+						old_date = event.date
+
+						if org_date < date:
+							new_date = delta + old_date
+						else:
+							new_date = delta - old_date
+
+						if old_date == new_date:
+							print "date is equal"
+						else:
+							print "NO set new date " + str(new_date)
+							event.date = new_date
+					except:
+						print "error setting date"
+				try:
+					event.save()
+					print "changed event " + str(event)
+				except:
+					print "could not save event!"
+			return HttpResponseRedirect('/calendar')
+		else:
+			form = Event_Form(instance=first_event)
+
+	context = RequestContext(request, {
+		'form': form,
+		"form_type" : "edit_group",
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+###################################################################
+# ADD USER COMMENT						  #
+###################################################################
+
+@login_required(login_url='/')
+def add_user_comment(request, event_id=None, user_id=None):
+	form_type = "standard_form"
+	form = None
+	info = None
+	event = None
+	user = None
+	comment = None
+	
+	if event_id != None:
+		event = Event.objects.get(pk=event_id)
+
+	if user_id != None:
+		user = User.objects.get(pk=user_id)
+
+	try: 
+		comment = Event_Person_Comment.objects.get(user=user, event=event)
+		print comment
+		form =  Event_Person_Comment_Form(instance=comment)
+	except:
+		print "no comment found yet"
+		form =  Event_Person_Comment_Form(initial= {'user': user, "event":event})
+		print traceback.format_exc()
+
+	if request.method == 'POST':
+		print "--> POST"
+
+		data = request.POST.copy()
+
+		if comment != None:
+			form = Event_Person_Comment_Form(data=data, instance=comment)
+		else:
+			form = Event_Person_Comment_Form(data=data)
+
+		if form.is_valid():
+			event_group = form.save()
+			info = "form saved"
+		else:
+			form.errors
+			info = "form is invalid"
+
+	context = RequestContext(request, {
+		'info': info,
+		'form': form,
+		"form_type" : form_type,
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# NOT PARTICIPATING					  	  #
+###################################################################
+
+@login_required(login_url='/')
+def user_not_participating(request, event_id=None, user_id=None):
+	event = None
+	user = None
+	user_not_participating = None
+	
+	if event_id != None:
+		event = Event.objects.get(pk=event_id)
+
+	if user_id != None:
+		user = User.objects.get(pk=user_id)
+
+	try: 
+		user_not_participating = Not_At_Event_Person.objects.get(user=user, event=event)
+	except:
+		print "user was participating"
+		print traceback.format_exc()
+
+	if user_not_participating != None:
+		user_not_participating.delete()
+	else:
+		not_at_event = Not_At_Event_Person()
+		not_at_event.user = user
+		not_at_event.event = event
+		not_at_event.save()
+
+	return HttpResponseRedirect('/calendar')
+
+
+
+
+
+#####################################################################
+# ADD GROUP					 										#
+#####################################################################
+
+@login_required(login_url='/')
+def handle_event_group(request, event_id = None, event_group_id = None):
+	form = Event_Group_Form()
+	event = None
+	start_date = None
+	end_date = None
+	print ("HANDLE EVENT GROUP")
+	print ("event_id " + event_id)
+
+	try:
+		event = Event.objects.get(pk=event_id)
+		form =  Event_Group_Form(data = {'start_date': event.date, 'name' : event.name })
+		start_date = event.date
+
+		try:
+			int(event_group_id)
+			requested_event_group = Event_Group.objects.get(pk=event_group_id)
+			end_date = requested_event_group.end_date
+			start_date = requested_event_group.start_date
+			if request.method == 'POST':
+				form = Event_Group_Form(data=request.POST, instance=requested_event_group)
+			else:
+				form = Event_Group_Form(instance=requested_event_group)
+			set_session_var("status_info", "Gruppe bearbeiten!", request)
+		except:
+			set_session_var("status_info", "Neue Gruppe anlegen!", request)
+			form = Event_Group_Form(data=request.POST)
+
+		if request.method == 'POST':
+			if form.is_valid():
+				event_group = form.save()
+				event.event_group = event_group
+				event.save()
+				form = Event_Group_Form(instance = event_group)
+				set_session_var("status_info", "Gruppe erfolgreich gespeichert!", request)
+				sync_events()
+
+				return HttpResponseRedirect('/edit/event_group/' + str(event.pk) + "/" + str(event_group.pk) + "/")
+			else:
+				set_session_var("status_info", "Gruppe konnte nicht gespeichert werden!", request)
+
+	except:
+		form = None
+		set_session_var("status_info", "Keine passende Stunde gefunden! Bitte legen Sie zuerst eine Stunde an!", request)
+
+	context = RequestContext(request, {
+		'form': form,
+		"form_type" : "event_group",
+		'start_date': start_date,
+		"end_date"	: end_date,
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# EDIT GROUP					  		  #
+###################################################################
+
+@login_required(login_url='/')
+def edit_event_group(request, event_group_id=None, event_id=None):
+
+	form_type = "event_group"
+	form = None
+	requested_event_group = None
+	info = None
+
+	if event_group_id != None:
+		requested_event_group = Event_Group.objects.get(pk=event_group_id)
+
+	if requested_event_group != None:
+		if request.method == 'POST':
+			form = Event_Group_Form(data=request.POST, instance=requested_event_group)
+
+			if form.is_valid():
+				form.save()
+				info = "Gruppe erfolgreich editiert!"
+		else:
+			form = Event_Group_Form(instance = requested_event_group)
+	else:
+		info = "Die gewünschte Gruppe konnte leider nicht gefunden werden."
+
+	if info == None:
+		context = RequestContext(request, {
+			'form': form,
+			"form_type"   : form_type,
+		})
+	else:
+		context = RequestContext(request, {
+			'info': info,
+		})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+
+
+###################################################################
+# PRINT EVENTS							  #
+###################################################################
+
+@login_required(login_url='/')
+def print_events(request):
+
+	users = User.objects.all().order_by('last_name', "username")
+	contracts = Contract.objects.all().order_by("end_date")
+	users_persons = None
+	events = None
+	calendar = None
+	events_by_lead = None
+	today = date.today()
+	contract = None	
+
+	if request.method == 'POST':
+		date_from_post = request.POST.get('date', None)
+		do_print_users = request.POST.get("print-users", None)
+		do_print_calendar = request.POST.get("print-calendar", None)
+		do_print_contract = request.POST.get("print-contract", None)
+
+		# print user list
+		if do_print_users != None:
+			users_persons = {}
+			users = User.objects.all().order_by('last_name', "username")
+			persons = Person.objects.all()
+			counter = 0
+
+			for user in users:
+				if persons:
+					person_counter = 0
+
+					for person in persons:
+
+						if user == person.user:
+							users_persons[user] = person
+							break
+						if person_counter == (len(persons) - 1):
+							users_persons[user] = user
+
+						person_counter = person_counter + 1
+				else:
+					users_persons[user] = user
+					
+				counter = counter + 1
+		elif do_print_calendar != None:
+			calendar = "test"
+
+		elif do_print_contract != None:
+			contract_id = request.POST.get("id_contract", None)
+			contract_data = {}
+
+			if contract_id != None:
+				contract = Contract.objects.get(pk=contract_id)
+
+		elif date_from_post != None:
+			date_from_post = datetime.strptime(date_from_post, '%d.%m.%Y')
+			events = Event.objects.filter(date__year=date_from_post.year, date__month=date_from_post.month, date__day=(date_from_post.day)).order_by('lead', "start_time")
+			events_by_lead = {}
+			former_lead = None
+			lead_counter = 0
+
+			for event in events:
+				print "event " + str(event)
+				event_list = None
+
+				if former_lead is None:
+					former_lead = event.lead
+					events_by_lead[lead_counter] = []
+
+				if event.lead != former_lead:
+					lead_counter = lead_counter + 1
+					events_by_lead[lead_counter] = []
+					event_list = events_by_lead[lead_counter]
+				else:
+					event_list = events_by_lead[lead_counter]
+
+				if event_list is not None:
+					event_list.append(event)
+					events_by_lead[lead_counter] = event_list
+
+				former_lead = event.lead
+
+	context = RequestContext(request, {
+		"events_by_lead" : events_by_lead,
+		"users_persons" : users_persons,
+		"users"			: users,
+		"calendar"		: calendar,
+		"contracts"		: contracts,
+		"contract"		: contract,
+		"today"			: today,
+	})
+
+	template = loader.get_template('base/print_events.html')
+
+	return HttpResponse(template.render(context))
+
+###################################################################
+# SYNC EVENTS							  #
+###################################################################
+
+
+def sync_events():
+
+	events = Event.objects.order_by("date", "room").all()
+	event_groups = Event_Group.objects.all()
+	info = "fehler beim synchronisieren"
+
+	# loop over all event groups
+	for curr_event_group in event_groups:
+
+		event_per_group = {}
+		counter = 0
+		start_date = curr_event_group.start_date
+		end_date = curr_event_group.end_date
+
+		try:
+			date_delta = start_date - end_date
+		except:
+			date_delta = None
+
+		# if start date and end date exists
+		if start_date and end_date and date_delta:
+
+			# try to get events from group
+			try:
+				events_from_curr_group = Event.objects.order_by("date", "start_time").filter(event_group=curr_event_group)
+				counter = 0
+				nbr_of_found_events = len(events_from_curr_group)
+
+				# if nbr_of_found_events is one create serie
+				if (nbr_of_found_events == 1):
+					print "CREATING SERIE"
+				
+					base_event = events_from_curr_group[0]
+					org_event = base_event
+					start_date = base_event.date
+
+					try:
+						date_delta = start_date - end_date
+						nbr_of_neccecary_events = get_nbr_of_neccecary_events(date_delta)
+						date_for_serie = start_date
+
+						if nbr_of_neccecary_events < 9000:
+							while counter < nbr_of_neccecary_events:
+								increased_delta = timedelta(days=7)
+								date_for_serie = date_for_serie + increased_delta
+								clone_event(base_event, date_for_serie)
+								counter = counter + 1
+						else:
+							print "safety break more then 9000 events!"
+
+					except:
+						print "could not set event " + str(base_event)
+				# check serie and update missing events
+				elif(nbr_of_found_events > 1):
+
+					nbr_of_neccecary_events = get_nbr_of_neccecary_events(date_delta)
+					date_for_serie = start_date
+					first_event = events_from_curr_group[0]
+					date_for_serie = first_event.date
+					event_dates = []
+
+					if (len(events_from_curr_group) < nbr_of_neccecary_events):
+						if nbr_of_neccecary_events < 5000:
+
+							for event in events_from_curr_group:
+								event_dates.append(event.date)
+
+							while counter < nbr_of_neccecary_events:
+
+								if date_for_serie in event_dates:
+									print "date found ! :) not cloning event"
+								else:
+									print "date not found... :( cloning event"
+									clone_event(first_event, date_for_serie)
+
+								increased_delta = timedelta(days=7)
+								date_for_serie = date_for_serie + increased_delta
+								counter = counter + 1
+
+						else:
+							print "safety break there are more then 5000 events!"
+					else:
+						print "event group has correct nbr of events"
+
+				info = "Stunden erfolgreich synchronisiert!"
+
+			except:
+				print "no event in group"
+				print traceback.format_exc()
+
+
+# CLONE EVENT
+def clone_event(event, date=None):
+
+	all_users = event.users.all()
+	event_clone = event
+	event_clone.pk = None
+
+	if date != None:
+		event_clone.date = date
+
+	event_clone.save()
+
+	for user in all_users:
+		event_clone.users.add(user)
+		event_clone.save()
+
+	print "event cloned"
+
+
+def get_nbr_of_neccecary_events(date_delta):
+	print date_delta
+	try:
+		nbr_of_neccecary_events = str(date_delta).split(" ")
+
+		if len(nbr_of_neccecary_events) > 1:
+			nbr_of_neccecary_events = int(nbr_of_neccecary_events[0])
+		else:
+			nbr_of_neccecary_events = int(str(date_delta).split(":")[0])
+	
+		# generate positive value if neccecary
+		if nbr_of_neccecary_events < 0:
+			nbr_of_neccecary_events = nbr_of_neccecary_events * -1
+
+		# only one per week
+		if nbr_of_neccecary_events >= 7:
+			nbr_of_neccecary_events = nbr_of_neccecary_events / 7
+	except:
+		nbr_of_neccecary_events = 0
+
+	print nbr_of_neccecary_events
+
+	return nbr_of_neccecary_events
+
+
+
+
+def get_smallest_date_from(array):
+	smallest_date = None
+	counter = 0
+
+	for elem in array:
+		print elem
+		elem = array[counter]
+		curr_date = elem.date
+
+		if smallest_date == None:
+			smallest_date = curr_date
+		else:
+			if curr_date < smallest_date:
+				smallest_date = curr_date
+
+		counter += 1
+
+	return smallest_date
+
+
+
+@login_required(login_url='/')
+def forms(request):
+	print("~~~~~~~~~~ forms view.py _calendar ~~~~~~~~~~~~~")
+	NONE = "NONE"
+	MANAGE_CLASSES = "manage_classes"
+	MANAGE_TIMES = "manage_times"
+	MEMBER_REGISTRATION = "member_registration"
+	FORM_NEW_EVENT = "form-new_event"
+	template = "base/index.html"
+
+	if request.method == 'POST':
+		form_type = request.POST.get('form_type', NONE)
+
+		print ("requested form type " + form_type)
+
+		if form_type != NONE:
+			if form_type == MANAGE_CLASSES:
+				template = 'calendar/forms/form-manage-classes.html'
+			elif form_type == FORM_NEW_EVENT:
+				template = 'calendar/forms/form-new-event.html'
+			elif form_type == MEMBER_REGISTRATION:
+				template = 'calendar/forms/form-member-registration.html'
+			elif form_type == MANAGE_TIMES:
+				template = 'calendar/forms/form-manage-times.html'
+			else:
+				template = 'calendar/forms/form-manage-times.html'
+		else:
+			template = 'calendar/forms/form-manage-classes.html'
+
+
+	context = RequestContext(request, {
+		# TODO
+	})
+
+	template = loader.get_template(template)
+
+	return HttpResponse(template.render(context))
+
+
+
+@login_required(login_url='/')
+def calendar(request):
+	events = Event.objects.all()
+	persons = Person.objects.all()
+	log.error('persons ' + persons.query.__str__())
+
+	context = RequestContext(request, {
+		'persons' : persons, 
+		'events' : events,
+	})
+
+	if request.method == 'POST':
+		#TODO TEST FOR LOGIN
+		createNewEvent = request.POST.get('newEvent', False)
+		room = request.POST.get('room', 2)
+		room = 2
+		pos_x = request.POST.get('pos_x', 0)
+		pos_y = request.POST.get('pos_y', 0)
+
+		print("savint with x %s y %s" % (pos_x, pos_y))
+
+		if (createNewEvent):
+			newEvent = Event(category_id = 3, room_id=room, name="kein Name", pos_x=pos_x, pos_y=pos_y)
+			newEvent.save()
+			print("~~~~~~~~~~~~~~~~~~~~~~")
+			print("created new event")
+			print("~~~~~~~~~~~~~~~~~~~~~~")
+
+	template = loader.get_template('calendar/index.html')
+
+	return HttpResponse(template.render(context))
+
+
+
+
+def import_events():
+	line_counter = 0
+	data = open(settings.APP_ROOT + "/_calendar/StundenRaumbelegungsplan.csv")
+
+	for line in data:
+		attributes = line.split("\",\"")
+		counter = 0
+		#print ("~~~~~~~~~~~~~~~ line ~~~~~~~~~~~~~~~")
+		#print "LINE " + line
+		if line_counter < 50:
+		#if True == True:
+			event = None
+			event_name = ""
+			event_persons = ""
+			create_event = True
+
+			try:
+				event = Event.objects.get(name=attribute)
+
+				if event is not None:
+					create_event = False
+			except:
+				event = Event()
+
+			if create_event:
+				print("~~~~~ importing event ~~~~~~")
+				for attribute in attributes:
+					print " - " + str(counter) +  " " + attribute
+					user = attribute.split(" ")
+
+					if counter == 0:
+						print "lehrkraft " + attribute
+						event_name = attribute
+					elif counter == 1:
+						print "datum und zeit " + attribute
+						_data = attribute.split(" ")
+						try:
+							event.date = datetime.strptime(_data[0], '%d.%m.%Y')#'Jun 1 2005  1:33PM'12.12.2013
+						except:
+							print "COULD NOT PARSE DATE " + str(_data[0])
+						try:
+							event_name = " " + event_name + " " + _data[1]
+						except:
+							print"could not set date 1"
+						try:
+							event_name = " " + event_name + " " + _data[2]
+						except:
+							print"could not set date 2"
+						try:
+							event_name = " " + event_name + " " + " " + _data[3] + " min )"
+						except:
+							print"could not set date 3"
+					elif counter == 2:
+						print "Fach Typ " + attribute
+					elif counter == 3:
+						try:
+							room = Room.objects.get(name=attribute)
+						except:
+							room = Room(name=attribute)
+							room.save()
+						event.room = room
+						print "Raum " + attribute
+					elif counter == 12:
+						try:
+							if attribute != "Vertragsende":
+								event_name = event_name + " " + attribute
+								print "event name " + event_name
+						except:
+							print ""
+					elif counter == 5:
+						try:
+							event_name = event_name + " telefon " + attribute
+							print "event name " + event_name
+						except:
+							print "no telephone"
+					elif counter == 14:
+						print "COUNTER = 14 " + str(attribute)
+						try:
+							_data = attribute.split(",")
+							data0 = unicode(_data[0], "ISO-8859-1")
+						except:
+							print "data 0"
+							print data0
+						try:
+							event_name = event_name + " " + data0
+							print "event name " + event_name
+						except:
+							print "no-last-name"
+						try:
+							event_name = event_name + " " + _data[1]
+							print "event name " + event_name
+						except:
+							print "no-sur-name"
+						try:
+							username = unicode(_data[0], "ISO-8859-1") #unicode(_data[1], "utf-8")//_data[1]
+							username = username + " " + unicode(_data[1], "ISO-8859-1")
+							username = username
+						except:
+							print traceback.format_exc()
+							username = "ANOMYNOUS_" + str(line_counter)
+						print("USERNAME " + username)
+						try:
+							event_persons = User.objects.get(username=username)
+						except:
+							print sys.exc_info()[0]
+							try:
+								event_persons = User.objects.create_user(
+									username = username,
+									email = "test@test.de",
+									password = 'opensesame',
+								)
+								event_persons.save()
+							except:
+								event_persons = User.objects.create_user(
+									username = "username" + str(random.randint(10000, 99999)),
+									email = "test@test.de",
+									password = 'opensesame',
+								)
+								event_persons.save()
+								print "COULD NOT CREATE USER"
+								print sys.exc_info()[0]
+							try:
+								person = Person()
+								person.user = event_persons
+								person.save()
+							except:
+								print"could not create person"
+
+					event.name = event_name
+
+					counter = counter + 1
+			else:
+				print "not creating a event"
+
+			try:
+				print "~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+				event.save()
+				event.persons.add(event_persons)
+				event.save()
+			except:
+				print "ERROR: could not save event"
+				print sys.exc_info()[0]
+
+		line_counter = line_counter + 1
+	data.close()

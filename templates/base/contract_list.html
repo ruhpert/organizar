@@ -1,0 +1,65 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+	<h2>Aktive Verträge</h2>
+	{% for contract in contracts %}
+		<dl class="contract">
+			<dt>{{ contract.number }}</dt>
+			<dd>Typ: {{ contract.type }}</dd>
+			<dd>Beginn: {{ contract.start_date }}</dd>
+			<dd>Ende: {{ contract.end_date }}</dd>
+			<dd>Teilnehmer: {{ contract.contact }}</dd>
+			<dd>Vertragspartner: {{ contract.billing_contact }}</dd>
+			<dd>Rabatt: {{ contract.discount }}</dd>
+			<dd>Preis: {{ contract.calc_price }}</dd>
+
+			{% if contract.pdfs %}
+				<dd>
+					PDFs:
+					<ul>
+						{% for pdf in contract.pdfs %}
+							<li><a href="{{ pdf.path }}">{{ pdf.name }}</a></li>
+						{% endfor %}
+					</ul>
+				</dd>
+			{% endif %}
+		</dl>
+		<a class="button" href="/print_contract/{{ contract.id }}/">Vertrag drucken</a>
+		
+	{% endfor %}
+	
+	
+	<br/><br/>
+	<h2>Abgelaufene Verträge</h2>
+	
+	{% for contract in old_contracts %}
+		<dl class="contract">
+			<dt>{{ contract.number }}</dt>
+			<dd>Typ: {{ contract.type }}</dd>
+			<dd>Beginn: {{ contract.start_date }}</dd>
+			<dd>Ende: {{ contract.end_date }}</dd>
+			<dd>Teilnehmer: {{ contract.contact }}</dd>
+			<dd>Vertragspartner: {{ contract.billing_contact }}</dd>
+			<dd>Rabatt: {{ contract.discount }}</dd>
+			<dd>Preis: {{ contract.calc_price }}</dd>
+
+			{% if contract.pdfs %}
+				<dd>
+					PDFs:
+					<ul>
+						{% for pdf in contract.pdfs %}
+							<li><a href="{{ pdf.path }}">{{ pdf.name }}</a></li>
+						{% endfor %}
+					</ul>
+				</dd>
+			{% endif %}
+		</dl>
+		<a class="button" href="/print_contract/{{ contract.id }}/">Vertrag drucken</a>
+		
+	{% endfor %}
+{% endblock %}
+
+{% block list %}
+
+{% endblock %}

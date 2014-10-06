@@ -1,0 +1,118 @@
+{% include "base/header_small.html" %}
+
+<body id="placeholder" class="{% if request.user and request.user.is_superuser %}admin{% else %}member{% endif %}">
+
+{% if info %}
+	<h1>{{ info }}</h1>
+{% endif%}
+{% if request.session.status_info %}
+	<div class="status-info-wrapper">
+		<div class="status-info {% if form_type %}form{% endif %}" data-initial="{{ request.session.status_info }}">
+			{{ request.session.status_info }}
+		</div>
+		<div class="close">x</div>
+	</div>
+{% endif%}
+
+{% if form_type %}
+	<div style="margin: 0 0 70px 0">
+		<a href="/" class="button back">Zurück</a>
+	</div>
+	{% if form_type == "event" %}
+		{% include "base/forms/event.html" %}
+	{% elif form_type == "person" %}
+		{% include "base/forms/person.html" %}
+	{% elif form_type == "contract" %}
+		{% include "base/forms/contract.html" %}
+	{% elif form_type == "event_group" %}
+		{% include "base/forms/event_group.html" %}
+	{% elif form_type == "edit_group" %}
+		{% include "base/forms/edit_group.html" %}
+	{% elif form_type == "standard_form" %}
+		{% include "base/forms/standard_form.html" %}
+	{% elif form_type == "todo" %}
+		{% include "base/forms/todo.html" %}
+	{% endif %}
+{% elif form_second and form_action %}
+	<div>
+		<form action="{{ form_action }}" method="post">
+			{% csrf_token %}
+			{{ form_second.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+{% else %}
+
+
+		{% include "base/menu.html" %}
+
+		<section id="page">
+			<div id="all_persons" class="hidden">
+				{% for user in all_users  %}
+					<a href="/person/edit/{{user.id }}/" class="search-value">
+						<button class="person"><span class="text">{% if not user.last_name %}{{ user.username }}{% elif user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.last_name }}{% endif %}</span>, <img src="/media/img/edit.png" alt="edit"/></button> 
+					</a>
+				{% endfor %}
+			</div>
+			{% if request.user.is_superuser %}
+				<div id="todos">
+					<div class="menu">
+						<div class="button show-hide-todos">&lt;</div>
+						<a class="button add-todo ajax show_in_overlay" data-divclassorid="#content" href="/handle_todo/">
+							+
+						</a>
+					</div>
+					{% for todo in todos %}
+						<div class="todo {{ todo.category | lower }} {{ todo.priority | lower }} {{ todo.done }}">
+							{% for user in todo.users.all %}
+								{{ user.first_name }} {{ user.last_name }}
+							{% endfor %}
+							<div class="hidden-data">
+								<div class="close button">x</div>
+								<a class="button ajax show_in_overlay" data-divclassorid="#content" href="/handle_todo/{{ todo.id }}/">
+									Todo <img src="/media/img/edit.png" alt="edit"/>
+								</a>
+								<p><b>{{ todo.text }}</b></p>
+								<p>Personen:
+								<ul>
+								{% for user in todo.users.all %}
+									<li>	
+										{{ user.first_name }} {{ user.last_name }}
+										<a class="button ajax" data-divclassorid="#content" href="/person/edit/{{ user.id }}/">
+											<img src="/media/img/edit.png" alt="edit"/>
+										</a>
+									</li>
+		
+									{% for person in persons %}
+										{% if person.user == user %}
+											{{ person.phone }} {% if person.mobile %}{{ person.mobile }}{% endif %}
+											{{ break }}
+										{% endif %}
+									{% endfor %}
+								{% endfor %}
+								</ul>
+								</p>
+								<p class="category"><b>Aufgabe: {{ todo.category }}</b></p>	
+								<p class="priority"><b>Priorität: {{ todo.priority }}</b></p>			
+							</div>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+			<div id="cal-message"></div>
+			<div id="time-raster"></div>
+			<div id="events"></div>
+
+		</section>
+		<div id="overlay">
+			<div id="overlay-background"></div>
+			<div id="overlay-content">
+				<div id="overlay-info"></div>
+			</div>
+		</div>
+{% endif %}
+
+
+
+</body>
+</html>

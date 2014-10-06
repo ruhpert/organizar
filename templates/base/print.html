@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	{% load i18n admin_modify staticfiles %}
+
+	<title>Vertrag</title>
+
+
+<style>
+@page {
+        size: a4 portrait;
+        @frame content_frame {          /* Content Frame */
+            padding-left: 20pt; padding-right: 20pt; width: 542pt; padding-top: 50pt; height: 700pt;
+            -pdf-frame-border: 0;
+            border:0;
+        }
+        @frame footer_frame {           /* Another static Frame */
+            -pdf-frame-content: footer_content;
+            padding-left: 20pt; padding-right: 20pt; width: 542pt; padding-top: 750pt; height: 90pt;
+            -pdf-frame-border: 0;
+            border:0;
+        }
+    }
+</style>
+<style>
+	* {
+		margin: 0;
+		padding: 0;
+	}
+	
+	div {
+		border: 0;
+	}
+
+	h5 {
+		line-height: 10px;
+		padding: 0;
+		margin: 0;
+	}
+
+	body {
+		font-size: 11px;
+		line-height: 16px;
+	}
+
+	#content {
+		padding: 20px;
+	}
+
+	table {
+		margin: 20px;
+	}
+
+	p {
+		margin: 0;
+		padding: 5px 20px;
+	}
+
+	.small {
+		font-size: 9px;
+		line-height: 12px;
+	}
+
+	ul {
+		margin: 20px 20px 20px 30px;
+		list-style-position: inside;
+	}
+	
+	li {
+		list-style-position: inside;
+	}
+
+	td, th {
+	  text-align: right;
+	  margin: 0;
+	  padding: 5px 0;
+	  line-height: 12px;
+	  vertical-align: top;
+	}
+
+	.bordered-box {
+		border: 1px solid black;
+	}
+	/* .contract table td.border-bottom, */
+	/* .contract table tr.border-bottom, */
+	/* .contract table th.border-bottom { */
+	/*   height: 40px; */
+	/*   width: 75%; */
+	/*   border-bottom: 1px solid black; */
+	/* } */
+	/* .contract table th:first-child(),
+	{
+	  text-align: left;
+	} */
+	#footer_content {
+		text-align: right;
+	}
+.align-left {
+ text-align: left;
+ }
+ .align-right {
+ text-align: right;
+ }
+ .border-top {
+ 	border-top: 1px solid black;
+ }
+	.contract h3 {
+	  line-height: 30px;
+	  font-size: 20px;
+	  padding: 10px 20px 0 20px;
+	}
+	.contract #logo {
+	  position: absolute;
+	  top: 0;
+	  right: 0;
+	  width: 100px;
+	  height: 100px;
+	}
+	.contract #logo img {
+	  height: 100px;
+	}
+	.contract .header {
+	  padding: 100px 0 0 0;
+	  font-size: 10px;
+	}
+	.left {
+	   text-align: left;
+	}
+	.right {
+	  text-align: right;
+	}
+	.contract .content {
+	  margin: 40px 0 40px 0;
+	}
+	.new-page {
+	  page-break-before: always;
+	}
+
+</style>
+</head>
+
+<body>
+	<div id="content">
+		{% block content %}{% endblock %}
+	</div>
+</body>
+</html>

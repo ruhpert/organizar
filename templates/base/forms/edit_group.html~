@@ -1,0 +1,112 @@
+<h1>Serie bearbeiten</h1>
+<h4>ACHTUNG! Es werden alle Termine in der Serie geändert!</h4>
+<br/><br/>
+{% if group_form %}
+<br/><br/><br/>
+	<script>
+		
+	</script>
+	<div>
+		<form action="./" method="post">
+			{% csrf_token %}
+			{{ group_form.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+
+{% endif %}
+	{% if form %}
+		<form action="./" method="post">
+	{% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="form-field">
+        {{ form.name.errors }}
+        <label for="id_name">Name <br/> Beschreibung</label>
+        {{ form.name }}
+    </div>
+	<div class="form-field">
+		{{ form.date.errors }}
+		<label for="id_date">Datum:</label>
+		{{ form.date }}
+	</div>
+    <div class="form-field">
+        {{ form.start_time.errors }}
+        <label for="id_start_time">Beginn:</label>
+        {{ form.start_time }}
+    </div>
+	<div class="form-field">
+		{{ form.end_time.errors }}
+		<label for="id_end_time">Ende:</label>
+		{{ form.end_time }}
+	</div>
+	<div class="form-field">
+		{{ form.room.errors }}
+		<label for="id_room">Raum:</label>
+		{{ form.room }}
+	</div>
+
+	<div class="form-field">
+		{{ form.persons.errors }}
+		<div id="search">
+			<input id="trigger-search" type="text" value="Suche" style="padding: 3px;" />
+			<div id="search-results" class="search-results"></div>
+			<div id="search-values" class="search-values">
+				{% for instance in form.users.field.queryset %}
+					<div data-cat="employee" data-id="{{ instance.pk }}" draggable="true" class="search-value user button">
+					{{ instance.first_name }} {{ instance.last_name }}
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+		<div class="users-list">
+
+		</div>
+		<script>
+				function search_users() {
+					var user_list = $(".users-list");
+					var select_users = $("select#id_users").find("option");
+					console.log($(".search-value.user.button"));				
+					$(".search-value.user.button").click(function() {
+						console.log("clicked ", this);
+						var clickedUser = $(this);
+						var id = clickedUser.data("id");
+						
+						$.each(select_users, function(key, option) {
+							option = $(option);
+							var value = option.val();
+
+							if (value == id) {
+								if (option.is(':selected')) {
+									option.attr('selected', false);
+									user_list.html("<b>Schüler " + option.text() + " entfernt!</b>");
+								}
+								else {
+									option.attr('selected', true);
+									user_list.html("<b>Schüler " + option.text() + " hinzugefügt!</b>");
+								}
+							}
+						});
+					});
+				}
+			$(document).ready(function() {
+				
+			});
+		</script><br/><br/>
+		<label for="id_persons">Schüler:</label>
+		{{ form.users }}
+	</div>
+	<div class="form-field">
+		{{ form.category.errors }}
+		<label for="id_category">Fach:</label>
+		{{ form.category }}
+	</div>
+	
+	<div class="form-field">
+		{{ form.lead.errors }}
+		<label for="id_lead">Lehrer:</label>
+		{{ form.lead }}
+	</div>
+	
+	<p><input class="button" type="submit" value="Absenden" /></p>
+</form>
+	{% endif %}

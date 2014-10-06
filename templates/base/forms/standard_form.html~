@@ -1,0 +1,20 @@
+{% if form %}
+	<script>
+		$(document).ready(function() {
+			var user = $("#id_user");
+			var event = $("#id_event");
+			user.hide();
+			event.hide();
+			console.log("event.parent().find ", event.parent().find("label"));
+			user.parent().find("label").text("<b>Schüler:</b> " + user.find(":selected").text());
+			event.parent().find("label").text("<b>Stunde:</b> " + event.find(":selected").text());
+		});
+	</script>
+	<div>	
+		<form action="./" method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+{% endif %}

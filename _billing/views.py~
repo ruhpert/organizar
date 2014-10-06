@@ -1,0 +1,97 @@
+from _billing.forms import Contract_Form
+from _billing.models import Contract
+from django.http import HttpResponse
+from django.template import RequestContext, loader
+import traceback
+from datetime import datetime, timedelta, date
+from django.db.models import Max
+from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+
+@login_required(login_url='/')
+def handle_contract(request=None, contract_id=None):
+	form_type = "contract"
+	contract_form = Contract_Form()
+	all_users = User.objects.all()
+	user_form = User_Form()
+	person_form = Person_Form()
+
+	contract = None
+	is_new = False
+	try:
+		contract = Contract.objects.get(pk=contract_id)
+		contract_form = Contract_Form(instance=contract)
+		print "contract " + str(contract)
+	except:
+		print "could not get any contract"
+	
+	if request.method == 'POST':
+		if contract != None:
+			contract_form = Contract_Form(data=request.POST, instance=contract)
+		else:
+			post_data = request.POST.copy()
+			post_data['number'] = create_next_contract_number()
+			contract_form = Contract_Form(data=post_data)
+			is_new = True
+
+		if contract_form.is_valid():
+			contract = contract_form.save()
+
+			if is_new:
+				return HttpResponseRedirect('/contract/' + str(contract.pk) + "/")
+
+			print "contract saved"
+		else:
+			print "contract form invalid!"
+
+	context = RequestContext(request, {
+		"user_form"	: user_form,
+		"person_form"	: person_form,
+		"all_users"	: all_users,
+		"contract_form"	: contract_form,
+		"form_type"	: form_type,
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+def create_next_contract_number():
+	number = ""
+	today = date.today()
+	year = str(today.year)
+	month = today.month
+	new_max = None
+	number_max = Contract.objects.all().aggregate(Max('number'))
+	number_max = number_max["number__max"]
+	len_max = 0
+	len_new_max = 0
+
+	try:
+		number_max = number_max.split("-")[1]
+		len_max = len(number_max)
+		new_max = int(number_max) + 1
+		len_new_max = len(str(new_max))
+	except:
+		print "ivalid contract number " + str(number_max)
+
+	delta = len_max - len_new_max
+
+	for x in xrange(0, delta):
+		new_max = "0" + str(new_max)
+
+	if month < 10:
+		month = "0" + str(month)
+	else:
+		month = str(month)
+
+	if new_max != None:
+		number = year + month + "-" + str(new_max)
+
+	print "new contract number " +  number
+
+	return number
+
+

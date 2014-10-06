@@ -1,0 +1,210 @@
+{% load i18n admin_modify staticfiles %}
+
+<!DOCTYPE html>
+
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		
+		<title>Schüler Verwaltung</title>
+		
+		<link rel="stylesheet" type="text/css" href="/media/css/normalize.css" />
+		<link rel="stylesheet" type="text/css" href="/media/css/foundation.min.css" />
+		<link rel="stylesheet" type="text/css" href="/media/css/core.css" />
+	
+		<style>
+			.pace .pace-progress {
+				background: #29d;
+				position: fixed;
+				z-index: 2000;
+				bottom: 0;
+				left: 0;
+				height: 10px;
+			
+				-webkit-transition: width 1s;
+				-moz-transition: width 1s;
+				-o-transition: width 1s;
+				transition: width 1s;
+			}
+	
+			.pace-inactive {
+				display: none;
+			}
+			.pace .pace-progress:after {
+				display: block;
+				position: fixed;
+				bottom: 30px;
+				left: .5rem;
+				content: attr(data-progress-text);
+				font-family: "Helvetica Neue", sans-serif;
+				font-weight: 100;
+				font-size: 1em;
+				line-height: 1em;
+				text-align: right;
+				color: rgba(0, 0, 0, 0.79999999999999996);
+			}
+		</style>
+	
+		<script type="text/javascript" src="/media/js/lib/jquery-1.8.2.min.js"></script>
+		<script type="text/javascript" src="/media/js/lib/jquery-ui-1.10.2.custom.min.js"></script>
+		<script type="text/javascript" src="/media/js/lib/mustache.js"></script>
+		<script type="text/javascript" src="/media/js/lib/jquery.cookie.js"></script>
+		<script type="text/javascript" src="/media/js/lib/pace.js"></script>
+		<script type='text/javascript' src="/media/js/lib/jquery.maskedinput.min.js" type="text/javascript"></script>
+		<script type="text/javascript" src="/media/js/lib/bootstrap.js"></script>
+		<script type='text/javascript' src='/media/js/lib/jquery.mousewheel.min.js'></script>
+		
+		<script type="text/javascript" src="/media/js/globals.js"></script>
+		<script type="text/javascript" src="/media/js/slider.js"></script>
+		<script type="text/javascript" src="/media/js/module.overlay.js"></script>
+		<script type="text/javascript" src="/media/js/module.infobox.js"></script>
+	
+		<script>	
+			var ALL_EVENTS = null; /*{% if json_events %}{% autoescape off %}{{ json_events }}{% endautoescape %}{% else %}null{% endif %};*/
+			var csrf_token = "{{csrf_token}}";
+			var SHOW_EVENTS = {% if show_events %}true{% else %}false{% endif %};
+		</script>
+	
+		<script type="text/javascript" src="/media/js/utils/date_util.js"></script>
+		<script type="text/javascript" src="/media/js/models/autocomplete.js"></script>
+		<script type="text/javascript" src="/media/js/models/calendar_model.js"></script>
+		<script type="text/javascript" src="/media/js/models/user_search_model.js"></script>
+		<script type="text/javascript" src="/media/js/models/ajax_model.js"></script>
+		<script type="text/javascript" src="/media/js/models/todo_model.js"></script>
+		<script type="text/javascript" src="/media/js/models/menu_model.js"></script>
+		<script type="text/javascript" src="/media/js/views/calendar_view.js"></script>
+		<script type="text/javascript" src="/media/js/module.infobox.js"></script>
+		<script type="text/javascript" src="/media/js/module.buttonEvents.js"></script>
+	
+	
+		<script>
+			function handle_contract() {
+				var add_user_buttons = $("#add-new-contact, #add-new-billing-contact");
+	
+				add_user_buttons.click(function() {
+					var button = $(this);
+					var wrapper = $(this).parent();
+	
+					button.addClass("hidden");
+					wrapper.find(".new-user-form").removeClass("hidden");
+					wrapper.find(".user-search").addClass("hidden");
+	
+					wrapper.find(".back").click(function() {
+						button.removeClass("hidden");
+						wrapper.find(".new-user-form").addClass("hidden");
+						wrapper.find(".user-search").removeClass("hidden");
+					});
+				});
+			
+				// show contract id if existing
+				var contract_id_field = $("#id_number");
+				var contract_id = contract_id_field.val();
+				if (typeof contract_id != "undefined" && contract_id != "") {
+					contract_id_field.parent().prepend(contract_id);
+				}
+			
+				// show and set billing contact if recently created
+	// 			var user_id = $("#id_id").attr("value");
+	// 			if (typeof user_id != "undefined" && user_id != "") {
+	// 				var select_options = $("#id_billing_contact").find("option");
+	// 				select_options.attr('selected', false);
+	// 				$.each(select_options, function(key, option) {
+	// 					var option = $(option);
+	// 					var value = option.val();
+	// 					if (value == user_id) {
+	// 						var wrapper = option.parent().parent();
+	// 						option.attr('selected', true);
+	// 						//wrapper.css("display", "block");
+	// 						//wrapper.html("<div class=\"hidden\">" + wrapper.html() + "</div>");
+	// 						//wrapper.prepend("<label>Rechnungsadresse:</label><input type=\"text\" value=\"" + option.text() + "\"readonly=\"readonly\"/>");
+	
+	// 						return false;
+	// 					}
+	// 				});
+	// 			}
+			
+				var selected_billing_options = $("#id_billing_contact").find("option:selected");
+				show_select_option(selected_billing_options, null, "Vertragspartner", 'id_billing_contact');
+	
+				// show contact if set 
+				var selected_options = $("#id_contact").find("option:selected");
+				show_select_option(selected_options, null, "Schüler", 'id_contact');
+	
+				function show_select_option(selected_options, value, label, id) {
+					$.each(selected_options, function(key, option) {
+						var option = $(option);
+						var wrapper = option.parent().parent();
+						var text = "";
+						var newID = "target_" + id
+						var errorDiv = wrapper.find(".error");
+	
+						wrapper.css("display", "block");
+						wrapper.html("<div class=\"hidden\">" + wrapper.html() + "</div>");
+	
+						if (typeof value != "undefined" && value != null && value != "") {
+							text = value;
+						}
+						else {
+							if (option.text() != "---------") {
+								text = option.text();
+								$.cookie(id, text);
+							}
+						}
+						wrapper.prepend(errorDiv[0].outerHTML + "<label>" + label + ":</label><input id=\"" + newID + "\" type=\"text\" value=\"" + text + "\"readonly=\"readonly\"/>");
+					});
+				}
+			}
+	
+			/**
+			 *
+			 * FUNCTION handlePrint
+			 *
+			 */
+			function handlePrint() {
+				var contract_type = $("#contract-type");
+	
+				if (typeof contract_type != "undefined") {
+					var text = contract_type.text();
+					text = text.split(" - ")[0];
+					contract_type.text(text);
+				}
+	
+				handlePagebreaks();
+	
+				function handlePagebreaks() {
+					var events = $(".events");
+					$.each(events, function(key, event_list) {
+						var height = 0;
+						var event_list = $(event_list).find(".event");
+						$.each(event_list, function(key, event){
+							var event = $(event);
+							height = height + parseInt(event.height());
+							if (height > 700) {
+								event.prepend('<div class="new-page"></div>');
+								height = 0;
+							}
+						});
+					});
+				}
+	
+				var d1 = new Date();
+				var d = d1.getDate();
+				var m = d1.getMonth() + 1;
+				var y = d1.getFullYear();
+				var dateField = Overlay.SELF.find("#date");
+				var temp = new Date();
+				var dateStr = "";
+				console.log("Overlay.SELF " , Overlay.SELF);
+				console.log("~~~ DATE FIELD " + dateField.size(), dateField);
+				console.log("~~~ 0");
+				d1 = Date_Util.dateToYMD(d1);
+				console.log("~~~ 1");
+				dateField.mask("99.99.9999", {reverse: true});
+				console.log("~~~ 2");
+				dateStr = Date_Util.dateToYMD(temp);
+				console.log("~~~ 3");
+				console.log("~~~ DATE STRING ", dateStr);
+				dateField.attr("value",dateStr);
+			}
+		</script>
+	</head>	

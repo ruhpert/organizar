@@ -1,0 +1,283 @@
+{% extends "base/print.html" %}
+
+{% block content %}
+	<div class="contract">	
+		 <div id="logo"><img src="http://127.0.0.1:8000/media/img/logo-bildungszentrum.jpg" alt="Bildungszentrum Rheinfelden" title=""/></div>
+		<div class="header clear">
+			<table>
+				<tr>
+					<td>
+						<div class="left">
+							<b>Bildungszentrum Rheinfelden</b><br/><br/>
+							Inhaber Pauline Eisele<br/>
+							<br/>
+							Karl-Fürstenberg-Str. 13<br/>
+							79618 Rheinfelden<br/>
+							Deutschland
+							<br/>
+							<br/>
+							T: 0049 - (0)7623/6808<br/>
+							E: info@bildungszentrum-rheinfelden.de<br/>
+							W: www.bildungszentrum-rheinfelden.de<br/>
+						</div>
+					</td>
+					<td>
+						<div class="right">
+							<b>Vertragspartner/in:</b><br/>
+							{{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}<br/>
+							{{ contract.billing_contact.person.street }} {{ contract.billing_contact.person.hnr }}<br/>
+							{{ contract.billing_contact.person.zip }} {{ contract.billing_contact.person.city }}<br/><br/>
+	
+							<b>Teilnehmer/in:</b><br/>
+							{{ contract.contact.first_name }} {{ contract.contact.last_name }}<br/>
+							{{ contract.contact.person.street }} {{ contract.contact.person.hnr }}<br/>
+							{{ contract.contact.person.zip }} {{ contract.contact.person.city }}<br/>
+	
+							<br/><br/>
+							<b>Datum: {{ today }}</b><br/><br/>
+							<b>Vertragsnummer: {{ contract.number }}</b>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	
+		<div class="content">
+			<br/>
+			<h3>Vertrag über {{ contract.type }}</h3>
+			<p>
+				Das Bildungszentrum Rheinfelden und {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }} schließen eine Vertrag über <b id="contract-type">{{ contract.type }}</b> an 
+				{% if contract.get_frequency_per_week == 1 %}
+					einem Tag
+				{% else %}	
+					{{ contract.get_frequency_per_week }} Tagen 
+				{% endif %}
+	
+				pro Woche für {{ contract.contact.first_name }} {{ contract.contact.last_name }} über 
+	
+				{% if contract.end_date == contract.start_date %}
+					mindestens einen Monat.
+				{% else %}
+					{% if contract.calc_month_difference == 1 %}
+						{{ contract.calc_month_difference }} Monat.
+					{% else %}	
+						{{ contract.calc_month_difference }} Monate.
+					{% endif %}
+				{% endif %}
+			</p>
+	
+			<p>
+				Der Unterricht findet im Bildungszentrum Rheinfelden statt. Einzelunterricht beträgt 45 min pro Einheit. 
+				Eine Einheit Gruppenunterricht ist 90 Minuten lang. Eine Gruppe besteht aus mindestens zwei Schülern. 
+				
+				Alle Stunden müssen 24 Stunden vorher abgesagt werden, unentschuldigte Stunden verfallen.
+			</p>
+	
+			<p>
+				Vertragsbeginn ist der <b>{{ contract.start_date }}</b>.
+				{% if contract.end_date == contract.start_date %}
+					Die Vertragslaufzeit ist unbefristet und kann erstmals zum Ende eines Zeitraums von einem Monat ab Vertragsbeginn gekündigt werden. Die Kündigungserklärung muss schriftlich an das Bildungszentrum Rheinfelden, in der Karl-Fürstenberg-Straße 13, in 79618 Rheinfelden erfolgen.
+				{% else %}
+					Die Vertragslaufzeit endet am <b>{{ contract.end_date }}</b>. 
+				{% endif %}
+			</p>
+
+			<table border="0" width="90%" style="padding-top: 50px; position: relative; left: 180px;">
+				<tr>
+					<th width="10%"></th>
+					<th class="align-left">
+						Leistung
+					</th>
+					<th>
+						Menge
+					</th>
+					<th>
+						Preis
+					</th>
+				</tr>
+				<tr>
+					<td width="10%"></td>
+					<td  class="align-left">
+						{{ contract.type }}
+					</td>
+					<td>
+						{{ contract.type.frequency }} x {{ contract.type.charge.charge }} €
+					</td>
+					<td>
+						{{ contract.calc_price }}0 €
+					</td>
+				</tr>
+	
+				{% for discount_data in contract.get_discounts %}
+					<tr>
+						<td width="10%"></td>
+						<td class="align-left">
+							{{ discount_data.name }} <b>*</b>
+						</td>
+						<td>
+							{{ discount_data.discount }} % 
+						</td>
+						<td>
+							- {{ discount_data.amount }}0 €
+						</td>
+					</tr> 
+				{% endfor %}
+	
+				<tr>
+					<td width="10%"></td>
+					<td class="align-left">
+						Monatliche Unterrichtsgebühr (Folge-Monate):
+					</td>
+					<td>
+					</td>
+					<td>
+						<b>{{ contract.calc_summ_without_fee }}0 €</b>
+					</td>
+				</tr>
+				<tr>
+					<td width="10%"></td>
+					<td class="align-left">Anmeldepauschale</td>
+					<td>Einmalige Gebühr im ersten Monat.</td>
+					<td>39,00 €</td>
+				</tr>
+				<tr>
+					<td width="10%" style="border:none;"></td>
+					<td class="align-left border-top">
+						Monatliche Unterrichtsgebühr erster Monat: **
+					</td>
+					<td class="border-top"></td>
+					<td class="border-top">
+						<b>{{ contract.calc_summ }}0 €</b>
+					</td>
+				</tr>	
+			</table>
+	
+			<p class="small">
+				* Sollte einer der Teilnehmer kündigen, werden die Rabatte, die mit anderen Telinehmern verküpft sind nichtig.	<br/>
+				** Sollte der Vertragsbeginn ab dem 15. eines Monats erfolgen, wird nur die Hälfte der monatlichen Unterrichtsgebühr fällig.
+				<br/> 
+				<span style="font-weight: normal">
+					Die Unterrichtsgebühr ist jeweils zum 1. des Monats fällig. Der Vertragspartner kann mit einer der beiden folgenden Bezahlarten bezahlen.<br/>
+					Beispiel einer fiktiven monatlichen Unterrichtsgebühr:<br/>
+					1. Monat „Monatliche Gebühr“ plus Anmeldegebür<br/>
+					2. Monat „Monatliche Gebühr“<br/>
+					3. Monat „Monatliche Gebühr“<br/>
+					Und so weiter bis zum Vertagsende<br/>
+				</span>
+			</p>
+		</div>
+	
+		{% include "base/pdf_templates/pdf_footer.html" %}
+	
+		<div class="content new-page">
+			<h3 style="margin-bottom: 0; padding-bottom: 0;">Zahlungsarten</h3>
+			<p>Bitte kreuzen Sie die gewünschte Zahlungsart an.</p>
+			<p>
+				<b> O Überweisung:</b><br/>
+				Kontoinhaber: Pauline Eisele<br/>
+				Kontonummer: 101227015<br/>
+				Bankleitzahl: 68350048 <br/>
+				Sparkasse Lörrach – Rheinfelden<br/>
+				IBAN DE0268350048 0101227015<br/>
+				BIC SKLODE66XXX<br/>
+				Verwendungszweck: {{ contract.contact.first_name }} {{ contract.contact.last_name }}
+			</p>
+			<p>
+				<b> O Barzahlung:</b><br/>
+				Barzahlungen sind unaufgefordert jeweils zum 1. des Monats im Büro des Bildungszentrum Rheinfeldens abzugeben.
+			</p>
+	
+			<p>
+				<b> O Einzugsermächtigung:</b><br/>
+				Ich ermächtige das Bildungszentrum Rheinfelden, die Forderungen aus diesem Vertrag von folgendem Konto abzubuchen. Der Einzug erfolgt zum 1. des Monats.<br/>
+			</p>
+			<div>
+			<table width="80%" style="position: relative; left: 30px; padding: 0 50px; margin: 0 60px; border: 1px solid #444;">
+				<tr>
+					<td>Kontoinhaber:</td><td class="border-bottom"></td>
+				</tr>
+				<tr>
+					<td>IBAN:</td><td class="border-bottom"></td>	
+				</tr>
+				<tr>
+					<td>BIC:</td><td class="border-bottom"></td>
+				</tr>
+				<tr>
+					<td>Geldinstitut:</td><td class="border-bottom"></td>
+				</tr>
+				<tr>
+					<td>Gläubiger-ID: </td><td class="border-bottom align-left">DE36ZZZ00001049055</td>
+				</tr>
+			</table>
+			</div>
+		</div>
+	
+		{% include "base/pdf_templates/pdf_footer.html" %}
+	
+		<div class="content new-page">
+	
+			<h3>Allgemeine Geschäftsbedingungen</h3>
+	
+			<p>
+				<b>Vertrag:</b></br>
+			
+				Mit diesem Vertrag wird eine Vereinbarung über Nachhilfe- und Förderunterricht abgeschlossen.
+			</p>
+			<p>
+				<b>Unterricht:</b></br>
+	
+				Der Unterricht findet im Bildungszentrum Rheinfelden, Karl-Fürstenberg-Straße 13, 79618 Rheinfelden statt. Findet der Unterricht mit 1 Schüler statt, ist die Dauer 45 Min pro Unterrichtseinheit. Ab 2 Schülern ist die Unterrichtseinheit 90 Minuten lang.
+			</p>
+			<p>
+				<b>Fehlstunden:</b></br>
+				Alle Termine müssen 24 Stunden vorher telefonisch unter 07623/6808 oder in dringenden Fällen unter 0172/4231045 oder per Email an info@Bildungszentrum-Rheinfelden.de abgesagt werden. 
+				Verpasst der Schüler Stunden, berechtigt dies nicht zur Gebührenminderung. Er hat bei entschuldigten Fehlen wie Krankheit oder fristgerecht abgesagten Terminen Anrecht auf Ersatzstunden. Ein Anspruch auf Ersatzstunden für unentschuldigte Fehlstunden besteht nicht.
+				Ersatzstunden verfallen mit Ablauf des Vertrages. Die Verrechnung von Ersatzstunden ist nicht möglich.
+			</p>
+			<p>
+				<b>Ferien:</b></br>
+				Der Unterricht findet in allen Ferien außer in den Weihnachtsferien, am Rosenmontag, Gründonnerstag bis Osterdienstag statt. Die versäumten Stunden werden vorgezogen oder werden später nachgeholt.
+				In den Sommerferien haben wir die ersten 4 Wochen geschlossen. Während der Betriebsferien ist die Unterrichtsgebühr normal fällig. Der Schüler erhält damit wahlweise Anspruch auf einen Ferienintensivkurs pro Wochenstunde oder die entsprechende Anzahl an Zusatzstunden. 
+				Die Ferienintensivkurse finden in den Herbst- Oster-, -Fasnacht- und Pfingstferien statt sowie in den letzten 2 Wochen der Sommerferien.
+			</p>
+			<p>
+				<b>Zahlungsweise:</b></br>
+	
+				Lastschrift: 
+				Die Beiträge sind zum 1. eines Monats im Voraus fällig und werden bis zum 3. Werktag per Lastschrift eingezogen. Die Anmeldegebühr wird zusammen mit dem ersten Monatseinzug abgebucht. 
+	
+				Überweisung:
+				Zahlungen sind unter Angabe des Verwendungszwecks und der Vertragsnummer auf das Konto Nr. 101227015, BLZ 68350048 zum 1. des Monats zu überweisen.
+	
+				Barzahlung: 
+				Barzahlungen sind unaufgefordert jeweils zum 1. des Monats im Büro des Bildungszentrum Rheinfeldens abzugeben.
+	
+				Änderungen und Nebenabreden
+	
+				Mündliche Nebenabreden sind nicht getroffen. Eventuelle nachträglich erfolgende Abänderungen des vorliegenden Vertrages durch mündliche Absprache sind aus Beweisgründen schriftlich niederzulegen.
+			</p>
+	
+			<p>
+				<b>Einwilligung in die Verwendung von Daten zu Werbezwecken</b></br>
+	
+				Wir erheben und verwenden Ihre bei Vertragsschluss angegebenen personenbezogenen Daten sowie die des Teilnehmers/der Teilnehmerin unter Beachtung der geltenden datenschutzrechtlichen Bestimmungen. Die Verwendung der personenbezogenen
+				Daten erfolgt zum Zwecke der Abwicklung des mit Ihnen bestehenden Vertragsverhältnisses.
+	
+				<ul>
+					<li>Ihren Namen und Ihre Anschrift benötigen wir, um Kenntnis zu haben, wer unser Vertragspartner ist, d. h. Wem gegenüber wir unsere Leistungen erbringen und abrechnen.</li>
+					<li>Den Namen des Teilnehmers/der Teilnehmerin und dessen/deren Anschrift benötigen wir, um Kenntnis zu haben, zu wessen Gunsten der Vertrag geschlossen wird, d.h. wer am Nachhilfeunterricht teilnimmt.</li>
+					<li>Die Kontaktdaten (E-Mail-Adresse und Telefonnummer) benötigen wir, für gegebenenfalls erforderliche Rückfragen. Sie dienen auch zum Empfang von Informationen über Neuerungen, Angebote oder sonstige Marketingmaßnahmen, sofern Sie darin eingewilligt haben.</li>
+					<li>Die Angaben zur besuchten Schule und Schulform benötigen wir, um die Teilnehmer/ Teilnehmerinnen in geeignete Lerngruppen einordnen zu können.</li>
+					<li>Ihre Kontodaten benötigen wir, um die vereinbarten Entgelte einziehen zu können, sofern Sie uns eine Einzugsermächtigung erteilt haben.</li>
+				</ul>
+			</p>
+			<p style="margin: 0; padding: 0 20px;">
+				<b>Die Leistungen aus dieser Anmeldung sind nach § 4 Nr. 21.a) UStG von der Umsatzsteuer befreit.</b>
+			</p>
+			<p class="bordered-box" style="margin: 10px 0 0 0;">
+				(X) Ich bin damit einverstanden, Informationen über Angebote oder Neuerungen und andere Marketingmaßnahmen durch das Bildungszentrum Rheinfelden zu erhalten. Eine Weitergabe zu anderen Zwecken an Dritte findet nicht statt, es sei denn aufgrund zwingender gesetzlicher Vorschriften oder soweit ich darin gesondert eingewilligt habe.
+			</p>
+		</div>
+		{% include "base/pdf_templates/pdf_footer.html" %}
+	</div>
+{% endblock %}

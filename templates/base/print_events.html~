@@ -1,0 +1,531 @@
+{% load i18n admin_modify staticfiles %}
+
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<title>Schüler Verwaltung</title>
+		<link rel="stylesheet" href="/media/css/print.css" />
+
+
+	<script type="text/javascript" src="/media/js/lib/jquery-1.8.2.min.js"></script>
+	<script src="/media/js/lib/jquery.maskedinput.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="/media/js/models/user_search_model.js"></script>
+	<script type="text/javascript" src="/media/js/bootstrap.js"></script>
+
+<script>
+
+  $(document).ready(function() {
+  	var d1 = new Date();
+	//d1 = d1.toString('dd.MM.yyyy');
+	console.log("d1" + d1);
+	var d = d1.getDate();
+	var m = d1.getMonth() + 1;
+	var y = d1.getFullYear();
+	d1 = dateToYMD(d1);
+ 	$("#date").mask("99.99.9999", {reverse: true});
+        var temp = new Date();
+        var month = (1 + temp.getMonth());
+        if (month < 10) {
+                month = "0" + month
+        }
+        var dateStr =   temp.getDate() + "." +
+                        month + "." +
+                        temp.getFullYear();
+        $("#date").val(dateStr);
+
+});
+function dateToYMD(date) {
+    var d = date.getDate();
+    var m = date.getMonth() + 1;
+    var y = date.getFullYear();
+    return '' + (d <= 9 ? '0' + d : d) + '.' + (m<=9 ? '0' + m : m) + '.' + y;
+}
+</script>
+
+	</head>
+
+
+<body id="print">
+
+	<section id="page">
+
+
+		<!-- PRINT EVENTS BY LEAD -->
+
+		{% if events_by_lead %}
+			{% for events in events_by_lead.items %}
+				<div class="events">
+					<h4>
+						{% if events.1.0.lead.first_name and events.1.0.lead.last_name %}
+							{{ events.1.0.lead.first_name }} {{ events.1.0.lead.last_name }}
+						{% else %}
+							{{ events.1.0.lead.username }}
+						{% endif %}
+					</h4>
+					<br/>
+					{% for event in events.1 %}
+						<div class="event">
+							<div class="info"><b>{{ event.date|date:"d.m.Y - D" }} {{ event.start_time | time:"H:i"}} bis {{ event.end_time | time:"H:i"}} Uhr {{ event.lead.last_name }}</b> <span style="margin-left: 100px; display: inline-block;">Fach: {{ event.category }}</span> <span style="float:right;">{{ event.room }}</span></div>
+							<ul class="users">
+								{% for user in event.users.all %}
+									<li>
+										{% if user.first_name and user.last_name %}
+											{{ user.first_name }} 
+											{{ user.last_name }}
+										{% else %}
+											{{ user.username }}
+										{% endif %}
+										<span class="write_space"></span>
+									</li>
+								{% endfor %}
+							</ul>
+						</div>
+					{% endfor %}
+
+				</div>
+				<div class="new-page"></div>
+			{% endfor %}
+
+
+
+		<!-- PRINT THE CALENDAR OF THE USER -->
+
+
+		{% elif calendar %}
+			<h4>Stundenplan für Herr Lauber</h4>
+					<p>Woche 13.01.2014 - 20.01.2014</p>
+			<p></p>2
+			<table>
+				<tr>
+					<td>Zeit</td>
+					<td>Montag</td>
+					<td>Dienstag</td>
+					<td>Mittwoch</td>
+					<td>Donnerstag</td>
+					<td>Freitag</td>
+					<td>Samstag</td>
+					<td>Sonntag</td>
+				</tr>
+
+				<tr>
+					<td>08:00</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</table>
+
+
+
+		<!-- PRINT USER LIST -->
+
+		{% elif users_persons %}
+			{% for user, person in users_persons.items %}
+				<div class="user">
+					{% if person.sex %}
+						{{ person.sex }}
+					{% endif %}
+					{% if user.last_name and user.first_name %}
+						<span>{{ user.last_name }} {{ user.first_name }}</span>
+					{% else %}
+						<span>{{ user }}</span>
+					{% endif %}
+					<br/>
+					E-Mail: 
+					{% if user.email %}
+						<span>{{ user.email }}</span>
+					{% endif %}
+					<br/>
+					{% if person.street %}
+						{{ person.street }}
+					{% endif %}
+					{% if person.hnr %}
+						{{ person.hnr }}
+					{% endif %}
+					<br/>
+					{% if person.zip %}
+						{{ person.zip }}
+					{% endif %}
+					{% if person.city %}
+						{{ person.city }}
+					{% endif %}
+					<br/><br/>
+					{% if person.phone %}
+						Telefon: {{ person.phone }}<br/>
+					{% endif %}
+					{% if person.mobile %}
+						Handy: {{ person.mobile }}<br/>
+					{% endif %}
+					{% if person.accessibility %}
+						Verfügbarkeit {{ person.accessibility }}<br/>
+					{% endif %}
+
+					<br/>
+				</div>
+			{% endfor %}
+
+
+		{% elif contract %}
+			<div class="contract">	
+				 <div id="logo"><img src="/media/img/logo-bildungszentrum.jpg" alt="Bildungszentrum Rheinfelden" title=""/></div>
+				<div class="header clear">
+
+					<div class="left">
+						<b>Studienkreis Rheinfelden</b><br/>
+						Pauline Lewens<br/>
+						Karl-Fürstenberg-Str. 13<br/>
+						79618 Rheinfelden<br/>
+						Telefon: 07623/5989455<br/>
+						E-Mail: info@bildungszentrum-rheinfelden.de<br/>
+						<br/>
+					</div>
+
+					<div class="right">
+						<b>Vertragspartner/in:</b><br/>
+						{{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}<br/>
+						{{ contract.billing_contact.person.street }} {{ contract.billing_contact.person.hnr }}<br/>
+						{{ contract.billing_contact.person.zip }} {{ contract.billing_contact.person.city }}<br/><br/>
+
+						<b>Teilnehmer/in:</b><br/>
+						{{ contract.contact.first_name }} {{ contract.contact.last_name }}<br/>
+						{{ contract.contact.person.street }} {{ contract.contact.person.hnr }}<br/>
+						{{ contract.contact.person.zip }} {{ contract.contact.person.city }}<br/>
+
+						<br/><br/>
+						<b>Datum: {{ today }}</b></b><br/>
+						<b>Vertragsnummer: {{ contract.number }}</b><br/>
+
+					</div>
+					<div style="clear: both"></div>
+				</div>
+				<div class="content">
+					<h3>Vertrag über {{ contract.type }}</h3>
+					<p>
+					Das Bildungszentrum Rheinfelden und {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }} schließen eine Vertrag über <b>{{ contract.type }}</b> an 
+					{% if contract.get_frequency_per_week == 1 %}
+						einem Tag
+					{% else %}	
+						{{ contract.get_frequency_per_week }} Tagen 
+					{% endif %}
+
+					pro Woche für {{ contract.contact.first_name }} {{ contract.contact.last_name }} über 
+
+					{% if contract.end_date == contract.start_date %}
+						mindestens einen Monat.
+					{% else %}
+						{% if contract.calc_month_difference == 1 %}
+							{{ contract.calc_month_difference }} Monat.
+						{% else %}	
+							{{ contract.calc_month_difference }} Monate.
+						{% endif %}
+					{% endif %}
+					</p>
+					<p>
+					Der Unterricht findet im Bildungszentrum Rheinfelden statt. Einzelunterricht beträgt 45 min pro Stunde. 
+					Gruppenunterricht ist ab zwei Teilnehmern 90 Minuten lang. 
+					Ist in einer Gruppe nur ein Schüler beträgt die Unterrichtslänge 45 Minuten. 
+					Alle Stunden müssen 24 Stunden vorher abgesagt werden, unentschuldigte Stunden verfallen.
+					</p>
+					<p>
+					Vertragsbeginn ist der <b>{{ contract.start_date }}</b>.
+					{% if contract.end_date == contract.start_date %}
+						Die Vertragslaufzeit ist unbefristet und kann erstmals zum Ende eines Zeitraums von einem Monat ab Vertragsbeginn gekündigt werden. Die Kündigungserklärung muss schriftlich an das Bildungszentrum Rheinfelden, in der Karl-Fürstenberg-Straße 13, in 79618 Rheinfelden erfolgen.
+					{% else %}
+						Die Vertragslaufzeit endet am <b>{{ contract.end_date }}</b>. 
+					{% endif %}
+					</p>
+				</div>
+				<div class="billing">
+					<table border="0">
+						<tr><th><h5>Leistung</h5></th><th><h5>Menge</h5></th><th><h5>Preis</h5></th></tr>
+						<tr><td>{{ contract.type }}</td><td>{{ contract.frequency }} x {{ contract.charge }} € </td><td>{{ contract.calc_price }}0 €</td></tr>
+						{% for discount_data in contract.get_discounts %}
+							<tr><td>{{ discount_data.name }} <b>*</b></td><td>{{ discount_data.discount }} % </td><td>- {{ discount_data.amount }}0 €</td></tr> 
+						{% endfor %}
+						<tr><td><h5>Monatliche Unterrichtsgebühr (folge Monate):</h5></td><td></td><td><h5>{{ contract.calc_summ_without_fee }}0 €</h5></td></tr>
+						<tr><td>Anmeldepauschale</td><td>Einmalige Gebühr im ersten Monat.</td><td>39,00 €</td></tr>
+						<tr><td><h5>Monatliche Unterrichtsgebühr erster Monat: **</h5></td><td></td><td><h5>{{ contract.calc_summ }}0 €</h5></td></tr>	
+						
+					</table>
+<br/>
+					<p class="small">
+						* Sollte einer der Teilnehmer kündigen, werden die Rabatte, die mit anderen Telinehmern verküpft sind nichtig.	<br/>
+						** Sollte der Vertragsbeginn ab dem 15. eines Monats erfolgen, wird nur die Hälfte der monatlichen Unterrichtsgebühr fällig.
+					</p>
+<br/><br/>
+					<p>
+						Die Unterrichtsgebühr ist jeweils zum 1. des Monats fällig. Der Vertragspartner kann mit einer der beiden folgenden Bezahlarten bezahlen.<br/><br/>
+						Beispiel einer fiktiven monatlichen Unterrichtsgebühr:<br/>
+						
+						1. Monat „Monatliche Gebühr“ plus Anmeldegebür<br/>
+						2. Monat „Monatliche Gebühr“<br/>
+						3. Monat „Monatliche Gebühr“<br/>
+						Und so weiter bis zum Vertagsende<br/>
+					</p>
+					<br/><br/><br/><br/><br/>
+					<div class="sign clear">
+						<span class="left">
+						Unterschrift {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}, zugleich in Vollmacht des Ehepartners<br/>
+						</br>Rheinfelden, den ____________________________________
+						</span>
+						<span class="right">
+							Unterschrift Bildungszentrum Rheinfelden</br></br>
+							Rheinfelden, den ____________________________________
+						</span>
+					</div>
+				</div>
+
+
+
+
+
+
+
+
+				<div class="content new-page">
+					<h3>Zahlungsarten</h3>
+					<p>
+						<h5>Bei Überweisung:</h5>
+					 	Kontoinhaber: Pauline Lewens<br/>
+					    	Kontonummer: 101227015<br/>
+					   	Bankleitzahl: 68350048 <br/>
+                                              	Sparkasse Lörrach – Rheinfelden<br/>
+						IBAN DE0268350048 0101227015<br/>
+						BIC SKLODE66XXX<br/>
+						Verwendungszweck: {{ contract.contact.first_name }} {{ contract.contact.last_name }}
+					</p>
+					<br/>
+					<p>
+						<h5>Bei Barzahlung:</h5>
+						Barzahlungen sind unaufgefordert jeweils zum 1. des Monats im Büro des Bildungszentrum Rheinfeldens abzugeben.
+					</p>
+					<br/>
+					<div class="sign clear">
+						<span class="left">
+						Unterschrift {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}, zugleich in Vollmacht des Ehepartners<br/>
+						</br>Rheinfelden, den ____________________________________
+						</span>
+
+					</div><br/><br/><br/><br/>
+					<p>
+						<h5>Bei Einzugsermächtigung:</h5><br/><br/>
+						<div class="bordered-box">
+							<b style="text-transform: uppercase;">Einzugsermächtigung</b><br/>
+							<br/>
+							Ich ermächtige das Bildungszentrum Rheinfelden, die Forderungen aus diesem Vertrag von folgendem Konto abzubuchen.<br/>
+							<br/>
+							<table style="width: 55%;">
+								<tr>
+									<td>Kontoinhaber:</td><td class="border-bottom"></td>
+								</tr>
+								<tr>
+									<td>IBAN:</td><td class="border-bottom"></td>	
+								</tr>
+								<tr>
+									<td>BIC:</td><td class="border-bottom"></td>
+								</tr>
+								<tr>
+									<td>Geldinstitut:</td><td class="border-bottom"></td>
+								</tr>
+							</table>
+							<br/>
+							Der Einzug erfolgt zum 1. des Monats.<br/>
+							Unterschrift {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}<br/>
+							<br/>
+							Rheinfelden, den _________________________________________________________________________________
+						</div>
+					</p>
+				</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				<div class="content new-page">
+
+					<h3>Allgemeine Geschäftsbedingungen</h3>
+		
+					<p>
+						<b>Vertrag:</b></br>
+					
+					Mit diesem Vertrag wird eine Vereinbarung über Nachhilfe- und Förderunterricht abgeschlossen.
+					</p>
+					<p>
+					<b>Unterricht:</b></br>
+			
+					Der Unterricht findet im Bildungszentrum Rheinfelden, Karl-Fürstenberg-Straße 13, 79618 Rheinfelden statt. Findet der Unterricht mit 1 Schüler statt, ist die Dauer 45 Min pro Unterrichtseinheit. Ab 2 Schülern ist die Unterrichtseinheit 90 Minuten lang.
+					</p>
+					<p>
+					<b>Fehlstunden:</b></br>
+	
+					Alle Termine müssen 24 Stunden vorher telefonisch unter 07623/6808 oder in dringenden Fällen unter 0172/4231045 oder per Email an info@Bildungszentrum-Rheinfelden.de abgesagt werden. 
+			
+					Verpasst der Schüler Stunden, berechtigt dies nicht zur Gebührenminderung. Er hat bei entschuldigten Fehlen wie Krankheit oder fristgerecht abgesagten Terminen Anrecht auf Ersatzstunden. Ein Anspruch auf Ersatzstunden für unentschuldigte Fehlstunden besteht nicht.
+
+					Ersatzstunden verfallen mit Ablauf des Vertrages. Die Verrechnung von Ersatzstunden ist nicht möglich.
+					</p>
+					<p>
+					<b>Ferien:</b></br>
+		
+					Der Unterricht findet in allen Ferien außer in den Weihnachtsferien, am Rosenmontag, Gründonnerstag bis Osterdienstag statt. Die versäumten Stunden werden vorgezogen oder werden später nachgeholt.
+					In den Sommerferien haben wir die ersten 4 Wochen geschlossen. Während der Betriebsferien ist die Unterrichtsgebühr normal fällig. Der Schüler erhält damit wahlweise Anspruch auf einen Ferienintensivkurs pro Wochenstunde oder die entsprechende Anzahl an Zusatzstunden. 
+
+					Die Ferienintensivkurse finden in den Herbst- Oster-, -Fasnacht- und Pfingstferien statt sowie in den letzten 2 Wochen der Sommerferien.
+					</p>
+					<p>
+					<b>Zahlungsweise:</b></br>
+
+					Lastschrift: 
+					Die Beiträge sind zum 1. eines Monats im Voraus fällig und werden bis zum 3. Werktag per Lastschrift eingezogen. Die Anmeldegebühr wird zusammen mit dem ersten Monatseinzug abgebucht. 
+
+					Überweisung:
+					Zahlungen sind unter Angabe des Verwendungszwecks und der Vertragsnummer auf das Konto Nr. 101227015, BLZ 68350048 zum 1. des Monats zu überweisen.
+
+					Barzahlung: 
+					Barzahlungen sind unaufgefordert jeweils zum 1. des Monats im Büro des Bildungszentrum Rheinfeldens abzugeben.
+
+					Änderungen und Nebenabreden
+
+					Mündliche Nebenabreden sind nicht getroffen. Eventuelle nachträglich erfolgende Abänderungen des vorliegenden Vertrages durch mündliche Absprache sind aus Beweisgründen schriftlich niederzulegen.
+					</p>
+
+					<p>
+					<b>Einwilligung in die Verwendung von Daten zu Werbezwecken</b></br>
+
+					Wir erheben und verwenden Ihre bei Vertragsschluss angegebenen personenbezogenen Daten sowie die des Teilnehmers/der Teilnehmerin unter Beachtung der geltenden datenschutzrechtlichen Bestimmungen. Die Verwendung der personenbezogenen
+
+					Daten erfolgt zum Zwecke der Abwicklung des mit Ihnen bestehenden Vertragsverhältnisses.
+					<ul>
+					<li>Ihren Namen und Ihre Anschrift benötigen wir, um Kenntnis zu haben, wer unser Vertragspartner ist, d. h. Wem gegenüber wir unsere Leistungen erbringen und abrechnen.</li>
+					<li>Den Namen des Teilnehmers/der Teilnehmerin und dessen/deren Anschrift benötigen wir, um Kenntnis zu haben, zu wessen Gunsten der Vertrag geschlossen wird, d.h. wer am Nachhilfeunterricht teilnimmt.</li>
+					<li>Die Kontaktdaten (E-Mail-Adresse und Telefonnummer) benötigen wir, für gegebenenfalls erforderliche Rückfragen. Sie dienen auch zum Empfang von Informationen über Neuerungen, Angebote oder sonstige Marketingmaßnahmen, sofern Sie darin eingewilligt haben.</li>
+					<li>Die Angaben zur besuchten Schule und Schulform benötigen wir, um die Teilnehmer/ Teilnehmerinnen in geeignete Lerngruppen einordnen zu können.</li>
+					<li>Ihre Kontodaten benötigen wir, um die vereinbarten Entgelte einziehen zu können, sofern Sie uns eine Einzugsermächtigung erteilt haben.</li>
+					</ul>
+					</p></br></br></br>
+					<p class="bordered-box">
+					(X) Ich bin damit einverstanden, Informationen über Angebote oder Neuerungen und andere Marketingmaßnahmen durch das Bildungszentrum Rheinfelden zu erhalten. Eine Weitergabe zu anderen Zwecken an Dritte findet nicht statt, es sei denn aufgrund zwingender gesetzlicher Vorschriften oder soweit ich darin gesondert eingewilligt habe.
+					</p>
+					<p></br></br><br/>
+					<div class="sign clear">
+						<span class="left">
+						Unterschrift {{ contract.billing_contact.first_name }} {{ contract.billing_contact.last_name }}, zugleich in Vollmacht des Ehepartners<br/>
+						</br>Rheinfelden, den ____________________________________
+						</span>
+				</div>
+					</p>
+</br></br></br></br></br>
+<p class="small">Die Leistungen aus dieser Anmeldung sind nach § 4 Nr. 21.a) UStG von der Umsatzsteuer befreit.<br/> Steuer-Nr. 1143200159 <br/>Bildungszentrum Rheinfelden <br/>Inhaber: Pauline Lewens <br/>Karl-Fürstenberg-Straße 13 <br/>79618 Rheinfelden <br/>Telefon 07623/6808> </p>
+				</div>
+				<div style="clear: both"></div>
+			</div>
+
+		<!-- PRINT PRINT OPTIONS -->
+
+
+		{% else %}
+
+			<a href="/" class="button">Zurück</a>
+
+			<p></p><p></p>
+			<p></p><p></p>
+
+			<h3>Stunden drucken</h3>
+			<p>Geben Sie hier den Tag an von welchem Sie die Stunden drucken möchten.</p>
+			<p>Nach dem Absenden ("klick" auf Termine anzeigen) ganz normal auf Drucken klicken oder "Strg" + "d" drücken.</p>
+			<p></p>
+			<p></p>
+			<form action="./" method="post">
+				{% csrf_token %}
+				<label for="date">Datum</label><input type="text" id="date" name="date" />
+				<input type="submit" value="Termine anzeigen">
+			</form>
+
+			<p></p><p></p>
+			<p></p><p></p>
+
+			<h3>Schüler Liste drucken</h3>
+			<p></p>
+			<form action="./" method="post">
+				{% csrf_token %}
+				<input type="hidden" name="print-users" value="True" />
+				<input type="submit" value="Schüler Liste anzeigen">
+			</form>
+
+			<p></p><p></p>
+			<p></p><p></p>
+
+			<h3>Vertrag drucken</h3>
+			<p></p>
+
+			<form action="./" method="post">
+				{% csrf_token %}
+				<div class="search">
+					<input id="trigger-contract-search" type="text" value="Suche" style="padding: 3px;" />
+					<div id="contract-search-results" class="search-results"></div>
+					<div id="contract-search-values" class="search-values">
+						{% for contract in contracts %}
+							<div data-type="{{ contract.type }}" data-id="{{ contract.pk }}" draggable="true" class="search-value contract button">
+								VNr: {{ contract.number }}<br/>
+								Person: {{ contract.contact.first_name }} {{  contract.contact.last_name }} <br/>
+								Vertragsart: {{ contract.type }}<br/>
+								Zeit: {{ contract.start_date }} bis {{ contract.end_date }}<br/>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+				{% if contracts %}
+					<select id="id_contract" name="id_contract">
+						<option value="">----------------------</option>
+						{% for contract in contracts %}
+							<option value="{{ contract.pk }}">{% if contract.number %}{{ contract.number }}{% endif %}{{ contract.contact.first_name }} {{  contract.contact.last_name }}</option>
+						{% endfor %}
+					</select>
+				{% endif %}
+				<br/>
+				<input type="hidden" name="print-contract" value="True" />
+				<input type="submit" value="Vertrag drucken">
+			</form>
+
+
+
+			<p></p><p></p>
+			<p></p><p></p>
+
+			<h3>Stundenplan drucken (geht noch nicht)</h3>
+			<p></p>
+
+			<form action="./" method="post">
+				{% csrf_token %}
+				<label for="date">Tag in gewünschter Woche</label><input type="text" id="date" name="date" />
+				{% if users %}
+					<br/>
+					Benutzer: 
+					<select>
+					{% for user in users %}
+						<option value="{{user.id}}">{{ user.username }}</option>
+					{% endfor %}
+					</select>
+				{% endif %}
+				<br/>
+				<input type="hidden" name="print-calendar" value="True" />
+				<input type="submit" value="Stundenplan anzeigen">
+			</form>
+		{% endif %}
+	</section>
+</body>
+</html>

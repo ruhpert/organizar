@@ -1,0 +1,185 @@
+{% include "base/header.html" %}
+		<script>
+
+		var event_data = [
+		
+			{% if events %}
+			{% for event in events %}
+				{
+					"class"  : "{{ event.classes }}",
+					"course" : "{{ event.category }}",
+					"style"  : "top: {{ event.pos_y }}px; left: {{ event.pos_y }}px;",
+					"date"   : "18.08.2013:13:45",
+					"room"   : "{{ event.room }}",
+					"type"   : "Serie"
+				},
+			{% endfor %}
+			{% else %}
+				
+			{% endif %}
+		{
+			"class"  : "math",
+			"course" : "Matematik",
+			"style"  : "top: 130.417px; left: 735px;",
+			"date"   : "18.08.2013:10:30",
+			"room"   : "3",
+			"type"   : "Einzel"
+		}
+		];
+
+	$(document).ready(function() {
+	
+		var date = new Date();
+		var d = date.getDate();
+		var m = date.getMonth();
+		var y = date.getFullYear();
+		
+		$('#calendar').fullCalendar({
+			header: {
+				left: 'prev,today,next',
+				center: 'title',
+				right: 'month,basicWeek,basicDay'
+			},
+			editable: true,
+			events: [/*
+				{
+					title: 'All Day Event',
+					start: new Date(y, m, 1)
+				},
+				{
+					title: 'Long Event',
+					start: new Date(y, m, d-5),
+					end: new Date(y, m, d-2)
+				},
+				{
+					id: 999,
+					title: 'Repeating Event',
+					start: new Date(y, m, d-3, 16, 0),
+					allDay: false
+				},
+				{
+					id: 999,
+					title: 'Repeating Event',
+					start: new Date(y, m, d+4, 16, 0),
+					allDay: false
+				},
+				{
+					title: 'Meeting',
+					start: new Date(y, m, d, 10, 30),
+					allDay: false
+				},
+				{
+					title: 'Lunch',
+					start: new Date(y, m, d, 12, 0),
+					end: new Date(y, m, d, 14, 0),
+					allDay: false
+				},
+				{
+					title: 'Birthday Party',
+					start: new Date(y, m, d+1, 19, 0),
+					end: new Date(y, m, d+1, 22, 30),
+					allDay: false
+				},
+				{
+					title: 'Click for Google',
+					start: new Date(y, m, 28),
+					end: new Date(y, m, 29),
+					url: 'http://google.com/'
+				}*/
+			]
+		});
+		
+	});
+
+</script>
+	
+	<body>
+		<section id="page">
+			<header id="header" class="menu">
+				<div class="bg"></div>
+				<div class="inner-wrapper">
+					<div id="cal-navigation"></div>
+					<div id="search">
+						<input id="trigger-search" type="text" value="Suche" style="padding: 3px;" />
+						<div id="search-results"></div>
+						<div id="search-values">
+							{% if persons %}
+        			                        <ul>
+	                        	                {% for person in persons %}
+								<li data-cat="employee" draggable='true' class='employee search-value user button'>{{ person.first_name }} {{ person.last_name }}</li>
+                                       	 		{% endfor %}
+                                			</ul>
+                               				{% else %}
+                                        			<p>No users found.</p>
+                                			{% endif %}
+<!--
+							<li data-cat="employee" draggable='true' class='employee search-value user button'>Hr. Lauber</li>
+							<li data-cat="employee" draggable='true' class='employee search-value user button'>Fr. Linke</li>
+							<li data-cat="employee" draggable='true' class='employee search-value user button'>Hr. Schulze</li>
+i							<li data-cat="employee" draggable='true' class='employee search-value user button'>Hr. Aart</li>
+Users							<li data-cat="employee" draggable='true' class='employee search-value user button'>Hr. Haas</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Hr. Maier</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Fr. Huber</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Hr. Schmied</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Hr. Müller</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Hr. Eckert</li>
+							<li data-cat="customer" draggable='true' class='customer search-value user button multiple'>Fr. Dietrich</li>
+							<li data-cat="employee" draggable='true' class='search-value user button multiple'>Fr. Melino</li>
+-->
+						</div>
+					</div>
+					<div id="show-menu"></div>
+					<div id="menu">
+						<nav>
+							<div id="trigger-user-registration" class="button" data-action="load(forms/form-member-registration.html)" data-data="{'form_type' : 'member_registration'}">
+								<span>Personen verwalten</span>
+							</div>
+							<div id="trigger-new-class" class="button" data-action="load(forms/form-manage-classes.html)">
+								<span>Fächer Verwalten</span>
+							</div>
+							<div id="trigger-new-class" class="button" data-action="load(forms/form-manage-times.html)">
+								<span>Zeiten verwalten</span>
+							</div>
+						</nav>
+					</div>
+				</div>
+			</header>
+
+			<section id="content" class="clear">
+				<div id="calendar">
+			</section>
+
+			<footer class="clear">
+									test
+				{% if events %}
+					YES 
+					{{events}}
+				{% endif %}
+
+				{% if events %}
+   				 <ul>
+  					{% for event in events %}	
+        					<li><a href="/polls/{{ event.id }}/">{{ event.name }}</a></li>
+    					{% endfor %}
+    				</ul>
+				{% else %}
+    					<p>No events are available.</p>
+				{% endif %}
+
+				This is a product of useIT Solutions
+				<br/>
+				Impressum | Kontakt | Login
+			</footer>
+		</section>
+		<div id="infobox">
+			<div id="infobox-bg"></div>
+			<div id="infobox-content"></div>
+		</div>
+		<div id="overlay">
+			<div id="overlay-background"></div>
+			<div id="overlay-content"></div>
+			<div id="overlay-info"></div>
+		</div>
+		<div id="back-to-top"><img src="img/arrow-up.png" alt="back to top" title="Zurück zum Seitenanfang"></div>
+	</body>
+</html>

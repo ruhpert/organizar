@@ -1,0 +1,185 @@
+{% include "base/header_small.html" %}
+
+<body id="placeholder">
+
+	<section id="header">
+		<div class="bg"></div>
+		<div id="logo"><div class="bg"><img src="/media/img/book.png" alt="Menü"/>organizar.de</div>
+		<div class="inner-wrapper">
+			<div id="cal-nav">
+				<a href="/" class="button" style="float: left;"><img src="/media/img/home.png" alt="Startseite"/></a>
+				<button id="cal-go-to-today" class="button">Heute</button>
+				<button id="prev-week" class="button">&lt;&lt;</button>
+				<button id="prev-day" class="button">&lt;</button>
+				<span id="cal-date" style="display: inline-block; width: 240px; text-align: center; font-weight: bold; font-size: 20px;"></span>
+				<button id="next-day" class="button">&gt;</button>
+				<button id="next-week" class="button">&gt;&gt;</button>
+				<span class="sort-calendar">
+					Sortieren nach:<button class="button" id="cal-action-sort-by-lead">Lehrer</button><button id="cal-action-sort-by-room" class="button">Räume</button>
+				</span>
+				<br/>
+				<div class="form-field">
+					<label for="cal-go-to-date" style="margin: 0 0 0 100px;">springe zu Datum</label>
+					<div style="width: 500px;float: left; ">
+						<input type="text" id="cal-go-to-date" name="cal-go-to-date" />
+					</div>
+					<button id="cal-action-show-date" class="button">Anzeigen</button>
+				</div>
+				<div class="form-field">
+					<label for="cal-search-person" style="margin: 0 0 0 100px;">person Suchen</label>
+					<div style="width: 500px; float: left;">
+						<input type="text" id="cal-search-person" name="cal-search-person" />
+					</div>
+					<div id="users-list"></div>
+				</div>
+			</div>
+	
+			<div id="menu">
+				<ul>
+					<li><a class="button" href="/"><img src="/media/img/home.png" alt="Startseite"/><p>Home</p></a></li>
+					<li><a class="button" href="/event/new/add/">Stunde hinzufügen</a></li>
+					<li><a class="button" href="/person/new/0/">Benutzer hinzufügen</a></li>
+					<!--<a class="button" href="/contract/new/">Neuer Vertrag</a>-->
+					<!--<a class="button" href="/sync_events/">Synchronisieren</a>-->
+					<li><a class="button" href="/print_events/">Drucken</a></li><!--<a href="/move_events_in_future">future</a>-->
+					<li><a class="button" href="/handle_todo/">Todo hinzufügen</a></li>
+					<li><a class="button" href="/contract/new/">Vertrag hinzufügen</a></li>
+					<li><a class="button" href="/admin/logout/">Logout</a></li>
+				</ul>
+			</div>
+		</div>
+	</section>
+
+<section id="page">
+	<div id="all_persons" class="hidden">
+		{% for user in all_users  %}
+			<a href="/person/edit/{{user.id }}/">
+				<button class="person">{% if not user.last_name %}{{ user.username }}{% elif user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.last_name }}{% endif %}, <img src="/media/img/edit.png" alt="edit"/></button> 
+				
+			</a>
+		{% endfor %}
+	</div>
+	<div id="todos">
+		{% for todo in todos %}
+			<div class="todo {{ todo.category | lower }} {{ todo.priority | lower }} {{ todo.done }}">
+				{% for user in todo.users.all %}
+					{{ user.first_name }} {{ user.last_name }}
+				{% endfor %}
+				<div class="hidden-data">
+					<a class="button" href="/handle_todo/{{ todo.id }}/">
+						Todo <img src="/media/img/edit.png" alt="edit"/>
+					</a>
+					<p><b>{{ todo.text }}</b></p>
+					<p>Personen:
+					<ul>
+					{% for user in todo.users.all %}
+						<li>	
+							{{ user.first_name }} {{ user.last_name }}
+							<a class="button" href="/person/edit/{{ user.id }}/">
+								<img src="/media/img/edit.png" alt="edit"/>
+							</a>
+						</li>
+
+						{% for person in persons %}
+							{% if person.user == user %}
+								{{ person.phone }} {% if person.mobile %}{{ person.mobile }}{% endif %}
+								{{ break }}
+							{% endif %}
+						{% endfor %}
+					{% endfor %}
+					</ul>
+					</p>
+					<p class="category"><b>Aufgabe: {{ todo.category }}</b></p>	
+					<p class="priority"><b>Priorität: {{ todo.priority }}</b></p>			
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+<!--
+	<div id="help">
+		<div class="button help" style="background: red;">Hilfe</div>
+		<div class="text">
+			<h3>Hilfe bezüglich des anlegens von Personen:</h3>
+			<p>Die teilnehmenden Schüler bitte mit STRG drückend auswählen.</p>
+
+			<h4>Anlegen einer Serie bei noch nicht vorhandener Stunde:</h4>
+			<ol>
+				<li>1) neue Stunde Anlegen / Speichern</li>
+				<li>2) auf die Übersicht zurück gehen</b></li>
+				<li>3) Stunde editieren</li>
+				<li>4) Auf "Neu" bei Serie drücken</li>
+				<li>5) Serie anlegen / Speichern</li>
+				<li>6) Auf synchronisieren klicken</li>
+			</ol>
+			<h4>Anlegen einer Serie bei vorhandener Stunde:</h4>
+			<ol>
+				<li>1) Stunde editieren</li>
+				<li>2) Auf "Neu" bei Serie drücken</li>
+				<li>3) Serie anlegen / Speichern</li>
+				<li>4) Auf synchronisieren klicken</li>
+			</ol>
+			<p></p>
+
+			<p></p>
+			<p></p>
+			<p></p>
+		</div>
+	</div>
+-->
+{% if request.session.status_info %}
+	<div class="status-info">
+		{{ request.session.status_info }}
+	</div>
+{% endif%}
+
+{% if info %}
+	<h1>{{ info }}</h1>
+{% elif form_type %}
+	{% if form_type == "event" %}
+		{% include "base/forms/event.html" %}
+	{% elif form_type == "person" %}
+		{% include "base/forms/person.html" %}
+	{% elif form_type == "contract" %}
+		{% include "base/forms/contract.html" %}
+	{% elif form_type == "event_group" %}
+		{% include "base/forms/event_group.html" %}
+	{% elif form_type == "edit_group" %}
+		{% include "base/forms/edit_group.html" %}
+	{% elif form_type == "standard_form" %}
+		{% include "base/forms/standard_form.html" %}
+	{% elif form_type == "todo" %}
+		{% include "base/forms/todo.html" %}
+	{% endif %}
+	<!--
+	<div>
+		<form action="{{ form_action }}" method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>-->
+
+{% elif form_second and form_action %}
+
+	<div>
+		<form action="{{ form_action }}" method="post">
+			{% csrf_token %}
+			{{ form_second.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+{% else %}
+		<div id="cal-message"></div>
+
+	<div id="time-raster"></div>
+	<div id="events"></div>
+
+		
+
+
+{% endif %}
+
+</section>
+
+
+</body>

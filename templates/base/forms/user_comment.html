@@ -1,0 +1,9 @@
+{% if form %}
+	<div id="comment-form">	
+		<form action="./" method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<input class="button" type="submit" value="Speichern" />
+		</form>
+	</div>
+{% endif %}

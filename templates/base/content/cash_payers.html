@@ -1,0 +1,47 @@
+<div class="cash-payers">
+	<h3>Barzahler verwalten</h3>
+	<table>
+		<td>Name</td>
+		<td>März</td>
+		<td>April</td>
+		<td>Mai</td>
+		<td>Juni</td>
+		<td>Juli</td>
+		{% for cash_payer in cash_payers %}
+			<tr>
+				<td>{{cash_payer.user.last_name }} {{ cash_payer.user.first_name }}</td>
+				<td>
+					<label for="id_payed_2015_04" class="button">
+						<input type="checkbox" id="id_payed_2015_04" value="payed_2015_04" name="id_payed_2015_04" />
+						<span>Bezahlt</span>
+					</label>
+				</td>
+				<td>
+					<label for="id_payed_2015_05" class="button">
+						<input type="checkbox" id="id_payed_2015_05" value="payed_2015_05" name="id_payed_2015_05" />
+						<span>Bezahlt</span>
+					</label>
+				</td>
+				<td>
+					<label for="id_payed_2015_06" class="button">
+						<input type="checkbox" id="id_payed_2015_06" value="payed_2015_06" name="id_payed_2015_06" />
+						<span>Bezahlt</span>
+					</label>
+				</td>
+				<td>
+					<label for="id_payed_2015_07" class="button">
+						<input type="checkbox" id="id_payed_2015_07" value="payed_2015_07" name="id_payed_2015_07" />
+						<span>Bezahlt</span>
+					</label>
+				</td>
+				<td>
+					<label for="id_payed_2015_08" class="button">
+						<input type="checkbox" id="id_payed_2015_08" value="payed_2015_08" name="id_payed_2015_09" />
+						<span>Bezahlt</span>
+					</label>
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+</div>
+

@@ -1,0 +1,63 @@
+
+
+
+var Search_Model = (function(_this, $) {
+
+	 _this.init = function() {
+		search($("#trigger-contract-search"), $("#contract-search-values").find(".search-value.contract"), $("#contract-search-results"), $("#id_contract"));
+	};
+
+	var search = function(input, values, target, select) {
+		console.log("input ", input);
+		console.log("values ", values);
+
+
+		console.log("searching");
+
+		input.click(function() {
+			$(this).val("");
+		});
+
+		input.keyup(function(ev) {
+			var currInput = $(this);
+			var wantedValue = currInput.val();
+			
+			target.html("");
+			console.log("keyup");
+
+			$.each(values, function(key, val) {
+				val = $(val);
+				var valueText = val.text();
+				console.log("value ", valueText);
+				console.log("wanted value ", wantedValue);
+				console.log("valueText.indexOf(wantedValue) > -1 " + valueText.indexOf(wantedValue));
+				
+				if (valueText.indexOf(wantedValue) > -1) {
+					var clone = val.clone().appendTo(target);
+					clone.click(function() {
+						var id = $(val).data("id");
+						var select_options = select.find("option");
+						select_options.attr('selected', false);
+						$.each(select_options, function(key, option) {
+							option = $(option);
+							var value = option.val();
+							if (value == id) {
+								if (option.is(':selected')) {
+									option.attr('selected', false);
+									target.html("<b>Schüler " + option.text() + " entfernt!</b>");
+								}
+								else {
+									option.attr('selected', true);
+									target.html("<b>Schüler " + option.text() + " hinzugefügt!</b>");
+								}
+							}
+						});
+					});
+				}
+			});
+		});
+	};
+
+	return _this;
+
+}({}, jQuery));

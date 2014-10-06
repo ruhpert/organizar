@@ -1,0 +1,154 @@
+
+<!--
+	<h1>Einstellungen / Filter</h1>
+	<form action="/" method="post">
+		{% csrf_token %}
+		<label for="from">von</label><input name="from" type="text" placeholder="dd.mm.yyyy"/>
+		<label for="to">bis</label><input name="to" type="text" placeholder="dd.mm.yyyy"/>
+		<input type="submit" value="Filtern" class="button" />
+	</form>
+-->
+
+<!--
+	<ul class="events">
+	{% for key,events_by_date in events.items %}
+
+		{% for key,day in events_by_date.items %}
+			<li class="day clear">
+				<ul class="events-by-leader">
+					
+					{% for key,event in day.items %}
+						<li class="event clear {{ event.date|date:'D' }} {% if event.category %}{{event.category|lower }}{% else %}no-category{% endif %}" data-date="{{ event.date|date:"Y-m-d" }}">
+							<div class="visible-data">
+								<b>Lehrer:
+								{% if event.lead %}
+									{{ event.lead.last_name }}  {{ event.lead.first_name }}
+								{% else %}
+									kein Lehrer ausgewählt
+								{% endif %}
+								</b> 
+								<h5 class="time" style="color: black; font-size: 16px;"> {{ event.start_time | date:"H:i"}} bis {{ event.end_time | date:"H:i"}} </h5>
+								<h7>{{ event.date|date:"d.m.Y - l" }}</h7>
+								<br/>
+								<span>
+									<br/>
+									<b>Fach:</b> {% if event.category %}{{ event.category }}{% else %}kein Fach ausgewählt{% endif %}
+									<br/>
+									<b>Raum:</b> {% if event.room %}{{ event.room }}{% else %}kein Raum ausgewählt{% endif %}
+									<br/><br/><b>Schüler:</b><br/>
+									{% for user in event.users.all %}
+										{% if user.first_name and user.last_name %}
+											{{ user.first_name }} {{ user.last_name }}, 
+										{% else %}
+											{{ user.username }}, 
+										{% endif %}
+									{% endfor %}
+								</span>
+								<br/><br/>
+							</div>
+							<div class="hidden-data hidden {% if event.category %}{{event.category|lower }}{% else %}no-category{% endif %}">
+								<div class="data clear">
+									<h4 class="time" style="color: black;"> {{ event.start_time | time:"H:i"}} bis {{ event.end_time | time:"H:i"}} </h4>
+									<h5>{{ event.date|date:"d.m.Y - l" }}</h5>
+
+									<span>
+									
+										<b>Lehrer:</b> 
+										{% if event.lead %}
+											{{ event.lead.last_name }}  {{ event.lead.first_name }}
+											<a class="button" href="/person/edit/{{ event.lead.id }}/">
+												<img src="/media/img/edit.png" alt="edit"/>
+											</a>
+										{% else %}
+											kein Lehrer ausgewählt
+										{% endif %}
+										<br/>
+										<b>Fach:</b> {% if event.category %}{{ event.category }}{% else %}kein Fach ausgewählt{% endif %}
+										<br/>
+										<b>Raum:</b> {% if event.room %}{{ event.room }}{% else %}kein Raum ausgewählt{% endif %}
+									</span><br/><br/>
+									<b>Schüler:</b><br/>
+									<ul class="users">
+									{% for user in event.users.all %}
+										<li>
+											<span class="user-data">
+												{% if user.first_name and user.last_name %}
+													{{ user.first_name }} 
+													{{ user.last_name }}
+												{% else %}
+													{{ user.username }}
+												{% endif %}
+												{% for person in persons %}
+													{% if person.user == user %}
+														<br/>Telefon: {{ person.phone }}
+													{% endif %}
+												{% endfor %}
+											</span>
+											<a class="button" href="/person/edit/{{ user.id }}/">
+												<img src="/media/img/edit.png" alt="edit"/>
+											</a>
+											<!--
+											<a class="button" href="/person/grade/{{ person.id }}/{{ event.id }}/grading/">
+												<img src="/media/img/grading.png" alt="edit"/>
+											</a>
+											<a class="button" href="/person/{{ person.id }}/{{ event.id }}/comment/">
+												<img src="/media/img/comment.png" alt="edit"/>
+											</a>
+						
+											<a class="button" href="/person/{{ person.id }}/{{ event.event_group }}/details/">
+												<img src="/media/img/details.png" alt="edit"/>
+											</a>
+										</li>
+									{% endfor %}
+									</ul>
+								</div>
+								<div class="menu">
+									<a class="button" href="/event/{{ event.id }}/edit/">Stunde <img src="/media/img/edit.png" alt="edit"/></a>
+									<a class="button delete" href="/event/{{ event.id }}/delete/">Stunde <img src="/media/img/delete.png" alt="delete"/></a>
+									{% if event.event_group %}
+										<a class="button" href="edit/group/{{ event.event_group.id }}/{{ event.id }}/">Serie <img src="/media/img/edit.png" alt="edit"/></a>
+										<a class="button delete" href="delete/group/{{ event.event_group.id }}/">Serie <img src="/media/img/delete.png" alt="delete"/></a>
+										
+									{% endif %}
+									{% if event_group %}
+										<a class="button" href="/edit/event_group/{{ event.event_group }}/"><img src="/media/img/edit.png" alt="edit"/> gruppe</a>
+									{% endif %}
+								</div>
+							</div>
+						</li>
+					{% endfor %}
+				</ul>
+			</li>
+		{% endfor %}
+	{% endfor %}
+	</ul>-->
+
+
+
+
+
+
+
+
+
+
+function save_position() {
+			if (document.URL == "http://127.0.0.1:8000/")
+			{
+				var curr_position = $("#menu").offset().left;
+				var last_position = $.cookie('last_user_position');
+				if (typeof last_position != "undefined" && last_position > 0) {
+					var x = last_position - $(window).width();
+					window.scrollBy(last_position,0);
+					console.log("scrolling to " + last_position + " page width " + $("#page").width() + " x " + x + " window width " + $(window).width(), $('#page'));
+				}
+				else {
+					console.log("????");
+				}
+				$(window).scroll(function(ev) {
+					curr_position = $("#menu").offset().left;
+					$.cookie('last_user_position', curr_position);
+				});
+				
+			}
+		}

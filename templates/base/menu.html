@@ -1,0 +1,74 @@
+	<header id="header">
+		<div class="bg"></div>
+		<div id="logo" class="">
+			<div class="bg"></div>
+			<div class="content">MENÜ</div>
+			<!-- <img src="/media/img/book_black.png" alt="Menü"/>
+			organizar.de -->
+		</div>
+		<div class="inner-wrapper">
+			<div id="cal-nav" style="margin-bottom: 20px;">
+				<div class="navigation">
+					<button id="prev-week" class="button">&lt;&lt;</button>
+					<button id="prev-day" class="button">&lt;</button>
+					<span id="cal-date"></span>
+					<button id="next-day" class="button">&gt;</button>
+					<button id="next-week" class="button">&gt;&gt;</button>
+					<button id="cal-go-to-today" class="button">Heute</button>
+				</div>
+
+				<a href="/" class="button" style="float: left;"><img src="/media/img/home.png" alt="Startseite"/></a>
+
+				{% if request.user.is_superuser %}
+					<span class="sort-calendar">
+						<button class="button" id="cal-action-sort-by-lead">Lehrer</button><button id="cal-action-sort-by-room" class="button">Räume</button>
+					</span>
+					<br/>
+					<!-- 
+					<div class="form-field clear" style="margin: 20px 0 0 0">
+						<label for="cal-go-to-date" style="margin: 0 0 0 100px;">springe zu Datum</label>
+						<div style="width: 300px;float: left; ">
+							<input type="text" id="cal-go-to-date" name="cal-go-to-date" style="width: 100%"/>
+						</div>
+						<button id="cal-action-show-date" class="button">Anzeigen</button>
+					</div>
+					 -->
+					<div class="form-field clear" style="margin: 20px 0 0 0;">
+						<label for="cal-search-person" style="margin: 0 0 0 100px;">Person Suchen</label>
+						<div style="width: 300px; float: left;">
+							<input type="text" id="cal-search-person" name="cal-search-person" style="width: 100%"/>
+						</div>
+						<div id="users-list"></div>
+					</div>
+				{% else %}
+					{% if request.user.first_name %}<h5>Hallo {{ request.user.first_name }}</h5>{% endif %}
+				{% endif %}
+			</div>
+			<div class="logout">
+				<a class="button" href="/logout/">Logout</a>
+			</div>
+	
+			<div id="menu" class="menu">
+				<ul class="entries">
+					<li class="entry"><a class="button" href="/person/edit/{{ user.id }}/"><img src="/media/img/person.png" alt=""/><p>Eigenes Profil</p></a></li>
+					<li class="entry"><a class="button ajax show_in_overlay" data-divclassorid="#print-page" href="/print/" ><img src="/media/img/print.png" alt=""/><p>Drucken</p></a></li><!--<a href="/move_events_in_future">future</a>-->
+					{% if request.user.is_superuser %}
+						<!-- <li class="entry"><a class="button ajax show_in_overlay" data-divclassorid="#event-form-wrapper" href="/event/new/add/"><img src="/media/img/book_black.png" alt=""/><p>Stunde hinzufügen</p></a></li> -->
+						<!--<a class="button" href="/contract/new/">Neuer Vertrag</a>-->
+						<!--<a class="button" href="/sync_events/">Synchronisieren</a>-->
+						<li class="entry"><a class="button ajax show_in_overlay" data-divclassorid="#content" href="/handle_todo/"><img src="/media/img/todo.png" alt=""/><p>Aufgaben</p></a></li>
+						<li class="entry"><a class="button" target="_blank" data-callback="handle_contract" href="/contract/new/"><img src="/media/img/book_black.png" alt="" />Verträge</a></li>
+						<li class="entry"><a class="button ajax show_in_menu" href="/load_mail_menu/"><img src="/media/img/menu.png" alt="" />Kontroll- zentrum</a></li>
+						<li class="entry"><a class="button ajax show_in_overlay" data-divclassorid="#content" href="/person/new/0/"><img src="/media/img/person.png" alt=""/><p>Benutzer</p></a></li>
+						<!-- <li class="entry"><a class="button ajax show_in_menu" href="/handle_user/"><img src="/media/img/person.png" alt=""/> Benutzer Verwalten</a></li> -->
+						<!--  
+							barzaler
+							persönliche daten
+						 -->
+					 {% else %}
+						<li class="entry"><a class="button ajax show_in_overlay" data-divclassorid="#content" href="/person/edit/{{request.user.id}}/"><img src="/media/img/person.png" alt=""/>Persönliche Daten verwalten</a></li>
+					 {% endif %}
+				</ul>
+			</div>
+		</div>
+	</header>

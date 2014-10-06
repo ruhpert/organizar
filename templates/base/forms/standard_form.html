@@ -1,0 +1,35 @@
+<div id="content">
+{% if form %}
+	<div id="standard-form">
+		{% if info %}
+			<h2>{{ info }}</h2>
+		{% endif %}
+		<script>
+			$(document).ready(function() {
+				var user = $("#id_user");
+				var event = $("#id_event");
+				user.hide();
+				event.hide();
+				console.log("event.parent().find ", event.parent().find("label"));
+				user.parent().find("label").html("<b>Schüler:</b> " + user.find(":selected").text());
+				event.parent().find("label").html("<b>Stunde:</b> " + event.find(":selected").text());
+			});
+		</script>
+		<div>	
+			<form action="./" id="" method="post" data-default-action="{{ request.get_full_path }}">
+				{% csrf_token %}
+				{% for field in form %}
+					<div class="form-field {{ field.label | lower }}">
+						{% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+						<label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+						{{ field }}
+					</div>
+				{% endfor %}
+				<div class="form-field">
+					<input class="button" type="submit" value="Speichern" />
+				</div>
+			</form>
+		</div>
+	</div>
+{% endif %}
+</div>

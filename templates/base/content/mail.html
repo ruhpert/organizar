@@ -1,0 +1,39 @@
+<div id="mails" class="clear" style="margin-top: 50px;">
+	<button class="button back">Hauptmenü</button>
+	<br/><br/>
+	<h3 class="message">{{ message }}</h3>
+	<script>
+		$("document").ready(function() {
+			var mails = $("#mails");
+			var button_overloaded_events = mails.find(".button.overloaded-events");
+
+			button_overloaded_events.click(function() {
+				var _data = {'load' : 'overloaded_events', "csrfmiddlewaretoken":csrf_token};
+				var button = $(this);
+				var messageTarget = $("#mails .message");
+				var message = "Die Stunden werden nun analysiert.<br/>Dies kann aufgrund der grossen Anzahl von Stunden u.U. einige Minuten dauern.<br/>Bitte warten...";
+				Infobox.showMessage(message);
+				$.ajax({
+					url: "/send_mail/",
+					type: "POST",
+					data: _data, 
+				}).done(function( data ) {
+					var mails = $(data).filter('#mails');
+					var message = mails.find(".message");
+					Infobox.showMessage(message.html());
+					//Menu_Model.showMenuEntry(message.html());
+				}).fail(function() {
+					Infobox.showMessage("Technischer Fehler: Bitte versuchen sie es noch einmal.");
+				}).always(function() {
+					console.log( "complete" );
+				});
+			});
+		});
+	</script>
+	<div class="menu">
+		<ul>
+			<li class="button overloaded-events"><span>schicke Überbelegte Stunden</span></li>
+			<li class="button"><span>Mail schicken</span></li>
+		</ul>
+	</div>
+</div>

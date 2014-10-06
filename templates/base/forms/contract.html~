@@ -1,0 +1,42 @@
+{% if contract_form %}
+
+	<h1>einen neuen Vertrag anlegen</h1>
+
+	<div class="form-field">
+		<div class="button">neuen Schüler anlegen</div>
+		{% include 'base/forms/person.html' %}
+		<div class="button">neuen Rechnungskontakt anlegen</div>
+		oder
+	</div>
+	<div class="form-field">
+		<div class="user-search">
+			<input type="text" name="req-user" class="req-user" />
+			<div class="results"></div>
+			<div class="values">
+				{% for user in all_users %}
+					<div data-cat="{% for category in user.category.all %}{{ category.name }}{% endfor %}" data-id="{{ user.pk }}" class="search-value user button">
+						{{ user.first_name }} {{ user.last_name }}
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+
+
+		<form action="{{ form_action }}" method="post">
+			{% csrf_token %}
+			{% for field in form %}
+					<div class="form-field {{ field.label | lower }}">
+						{% if field.errors %}<div class="error"> {% for error in field.errors %}{{ error }}{% endfor %}</div>{% endif %}
+						<label class="control-label {% if field.errors %}error{% endif %}">{{ field.label }}</label> 
+						{{ field }}
+					</div>
+			{% endfor %}
+			<div class="form-field">
+				<input class="button" type="submit" value="Speichern" />
+			</div>
+		</form>
+	</div>
+{% else %}
+<h1>nope</h1>
+{% endif %}

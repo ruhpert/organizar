@@ -1,0 +1,172 @@
+<script>
+	$(document).ready(function() {
+		var edit_event_group = $("#edit-event-group");
+		var active_event_group = $("#id_event_group :selected");
+		var active_id = active_event_group.val();
+		var href = edit_event_group.attr("href");
+		href = href + active_id + "/"
+		//edit_event_group.attr("href", href);
+		console.log("active_event_group ", active_id);
+		
+		day_from_session = $.cookie('last_calendar_day');
+		console.log("day_from_session " + day_from_session);
+
+		/*if (typeof day_from_session != "undefined" && day_from_session != "Invalid Date") {
+			day_from_session = new Date(day_from_session)
+			console.log("setting day from session", day_from_session);
+			var day = (day_from_session.getDate() < 10) ? "0" : "";
+			day = day + day_from_session.getDate();
+			var month = parseInt(day_from_session.getMonth()) + 1;//(parseInt(day_from_session.getMonth()) < 10) ? "0" : "";
+			//month = month + day_from_session.getDay();
+			month = (parseInt(month) < 10) ? "0" + month : month;
+			year = day_from_session.getFullYear();
+			console.log("month " + month);
+			console.log("day " + day);
+			console.log("year " + year);
+			$("#id_date").val(day + "." + month + "." + year)
+			
+			console.log("curr day");
+		}*/
+
+		var fields = ["id_date", "id_start_time", "id_end_time", "id_room", "id_users", "id_category", "id_lead"];
+		var form = $("#event-form");
+		form.submit(function( event ) {
+			var form_valid = true;
+			$.each(fields, function(key, id) {
+				var elem = $("#" + id);
+				console.log("elem " , elem.val());
+				if (typeof elem.val() != "undefined" && elem.val() != "" && elem.val() != " ") {
+					console.log("valid!");
+					console.log("value = " , elem.val());
+					elem.css("border", "none");
+				}
+				else {
+					console.log("invalid");
+					elem.css("border", "5px solid red");
+					form_valid = false;
+				}
+			});
+			if (form_valid == false) {
+				event.preventDefault();
+			}
+
+		});
+	});
+</script>
+<form id="event-form" action="../edit/" method="post">
+	{% csrf_token %}
+
+
+    {{ form.non_field_errors }}
+    {{ form.name.errors }}
+    <div class="form-field" style="display: none;">
+       
+        <label for="id_name">Name <br/> Beschreibung</label>
+        {{ form.name }}
+    </div>
+    <div class="form-field">
+        {{ form.date.errors }}
+        <label for="id_date">Datum:</label>
+        {{ form.date }}
+    </div>
+    <div class="form-field">
+        {{ form.start_time.errors }}
+        <label for="id_start_time">Beginn:</label>
+        {{ form.start_time }}
+    </div>
+	<div class="form-field">
+		{{ form.end_time.errors }}
+		<label for="id_end_time">Ende:</label>
+		{{ form.end_time }}
+	</div>
+	<div class="form-field">
+		{{ form.room.errors }}
+		<label for="id_room">Raum:</label>
+		{{ form.room }}
+	</div>
+	<div class="form-field">
+		<div id="search" class="search">
+			<input id="trigger-search" type="text" value="Suche" style="padding: 3px;" />
+			<div id="search-results" class="search-results"></div>
+			<div id="search-values" class="search-values">
+				{% for instance in form.users.field.queryset %}
+					<div data-cat="employee" data-id="{{ instance.pk }}" draggable="true" class="search-value user button">
+					{{ instance.first_name }} {{ instance.last_name }}
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+		<div class="users-list">
+
+		</div>
+		<script>
+				function search_users() {
+					var user_list = $(".users-list");
+					var select_users = $("select#id_users").find("option");
+					console.log($(".search-value.user.button"));				
+					$(".search-value.user.button").click(function() {
+						console.log("clicked ", this);
+						var clickedUser = $(this);
+						var id = clickedUser.data("id");
+						
+						$.each(select_users, function(key, option) {
+							option = $(option);
+							var value = option.val();
+
+							if (value == id) {
+								if (option.is(':selected')) {
+									option.attr('selected', false);
+									user_list.html("<b>Schüler " + option.text() + " entfernt!</b>");
+								}
+								else {
+									option.attr('selected', true);
+									user_list.html("<b>Schüler " + option.text() + " hinzugefügt!</b>");
+								}
+							}
+						});
+					});
+				}
+			$(document).ready(function() {
+				
+			});
+		</script>
+	</div>
+	<div class="form-field">
+		{{ form.users.errors }}
+		<label for="id_users">Schüler:</label>
+		<div>
+		{{form.users}}
+		</div>
+
+	</div>
+	<div class="form-field">
+		{{ form.category.errors }}
+		<label for="id_category">Fach:</label>
+		{{ form.category }}
+	</div>
+	<div class="form-field">
+		{{ form.lead.errors }}
+		<label for="id_lead">Lehrer:</label>
+		{{ form.lead }}
+	</div>
+	<div class="form-field">
+		{{ form.event_group.errors }}
+		<label for="id_event_group">Termin Serie:</label>
+
+		<!--<select name="{{ form.event_group.name }}" id="id_{{ form.event_group.name }}">
+				<option value="">-------------</option>
+			{% for instance in form.event_group.field.choices %}
+				<option selected="selected" value="{{ instance.pk }}">{{ instance }}</option>
+			{% endfor %}
+		</select>
+		-->
+		{{ form.event_group }}
+		<a id="edit-event-group" class="button" href="/edit/event_group/{% if form.event_group.value %}{{ form.event_group.value }}/{% endif %}{{ form.initial.id }}/">
+			<img src="/media/img/edit.png" alt="edit"/>
+		</a>
+		<a id="new-event-group" class="button" href="/add/event_group/{% if form.initial.id %}{{ form.initial.id }}{% else %} {% endif %}/">
+			<strong>neu</strong>
+		</a>
+	</div>
+	<p><input class="button" type="submit" value="Absenden" /></p>
+</form>

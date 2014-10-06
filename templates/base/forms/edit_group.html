@@ -1,0 +1,96 @@
+<div id="content">
+	{% if info %}
+		<div class="info">{{ info }}</div>
+	{% endif %}
+	{% if event_to_delete %}
+			
+		<h4>Diese Stunden fallen aus dem Ramen.</h4>
+		<ul>
+			{% for event in event_to_delete %}
+				<li>
+					{{ event.date |date:"d.m.Y" }} {{ event.date |time:"g:i" }} {{ event.name }}
+					<a class="button" target="_blank" href="/event/{{ event.id }}/edit/" data-divclassorid="#content">
+						<img src="/media/img/edit.png" alt="edit"/>
+					</a>
+					<a class="button ajax event-group delete" href="/event/{{ event.id }}/delete/">
+						<img src="/media/img/delete.png" alt="delete"/>
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endif %}
+	<br/><br/><br/>
+	<h4>Gruppe bearbeiten</h4>
+	{% if group_form %}
+	
+	
+		<div>
+			<form action="./" method="post" data-default-action="{{ request.get_full_path }}">
+				{% csrf_token %}
+				{{ group_form.as_p }}
+				<input class="button" type="submit" value="Speichern" />
+			</form>
+		</div>
+	
+	{% endif %}
+		{% if form %}
+			<form action="./" method="post" data-default-action="{{ request.get_full_path }}">
+		{% csrf_token %}
+	    {{ form.non_field_errors }}
+	    <div class="form-field">
+	        {{ form.name.errors }}
+	        <label for="id_name">Name <br/> Beschreibung</label>
+	        {{ form.name }}
+	    </div>
+		<div class="form-field">
+			{{ form.date.errors }}
+			<label for="id_date">Datum:</label>
+			{{ form.date }}
+		</div>
+	    <div class="form-field">
+	        {{ form.start_time.errors }}
+	        <label for="id_start_time">Beginn: </label>
+	        {{ form.start_time }}
+	    </div>
+		<div class="form-field">
+			{{ form.end_time.errors }}
+			<label for="id_end_time">Ende:</label>
+			{{ form.end_time }}
+		</div>
+		<div class="form-field">
+			{{ form.room.errors }}
+			<label for="id_room">Raum:</label>
+			{{ form.room }}
+		</div>
+	
+		<div class="form-field">
+				<div class="search">
+					<input class="trigger-search" type="text" value="Suche" style="padding: 3px;" autocomplete="off" />
+					<div class="search-results"></div>
+					<div class="search-values">
+						{% for instance in form.users.field.queryset %}
+							<div data-cat="employee" data-id="{{ instance.pk }}" draggable="true" class="search-value user button">
+								<span class="text">{{ instance.first_name }} {{ instance.last_name }}</span>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
+			<label for="id_persons">Schüler:</label>
+			{{ form.users }}
+		</div>
+		<div class="form-field">
+			{{ form.category.errors }}
+			<label for="id_category">Fach:</label>
+			{{ form.category }}
+		</div>
+		
+		<div class="form-field">
+			{{ form.lead.errors }}
+			<label for="id_lead">Lehrer:</label>
+			{{ form.lead }}
+		</div>
+		
+		<p><input class="button" type="submit" value="Absenden" /></p>
+	</form>
+	{% endif %}
+</div>

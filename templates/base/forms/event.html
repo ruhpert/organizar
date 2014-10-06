@@ -1,0 +1,82 @@
+<div id="content">
+<div id="event-form-wrapper" >
+	<form id="event-form" action="./" method="post" data-callback="Calendar_View.newEventFormCallback()" data-default-action="{{ request.get_full_path }}">
+		{% csrf_token %}
+
+		<div class="form-field" style="display: none;">
+			{{ form.non_field_errors }}
+			{{ form.name.errors }}
+			<label for="id_name">Name <br/> Beschreibung</label>
+			{{ form.name }}
+		</div>
+		<div class="form-field">
+			{{ form.date.errors }}
+			<label for="id_date">Datum:</label>
+			{{ form.date }}
+		</div>
+		<div class="form-field">
+			{{ form.start_time.errors }}
+			<label for="id_start_time">Beginn:</label>
+			{{ form.start_time }}
+		</div>
+		<div class="form-field">
+			{{ form.end_time.errors }}
+			<label for="id_end_time">Ende:</label>
+			{{ form.end_time }}
+		</div>
+		<div class="form-field">
+			{{ form.room.errors }}
+			<label for="id_room">Raum:</label>
+			{{ form.room }}
+		</div>
+		<div class="form-field">
+			<div class="search">
+				<input class="trigger-search" type="text" value="Suche" style="padding: 3px;" autocomplete="off" />
+				<div class="search-results"></div>
+				<div class="search-values">
+					{% for instance in form.users.field.queryset %}
+						<div data-cat="employee" data-id="{{ instance.pk }}" draggable="true" class="search-value user button">
+							<span class="text">{{ instance.first_name }} {{ instance.last_name }}</span>
+						</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+		<div class="form-field">
+			{{ form.users.errors }}
+			<label for="id_users">Schüler:</label>
+			<div>
+			{{form.users}}
+			</div>
+	
+		</div>
+		<div class="form-field">
+			{{ form.category.errors }}
+			<label for="id_category">Fach:</label>
+			{{ form.category }}
+		</div>
+		<div class="form-field">
+			{{ form.lead.errors }}
+			<label for="id_lead">Lehrer:</label>
+			{{ form.lead }}
+		</div>
+		<div class="form-field">
+			{{ form.event_group.errors }}
+			<div class="hidden">{{ form.event_group }}</div>
+			<label for="id_event_group">Termin Serie:
+			</label>
+			<!-- 
+			<a id="edit-event-group" class="button" href="/edit/event_group/{% if form.initial.id %}{{ form.initial.id }}{% else %}new{% endif %}/{% if form.event_group.value %}{{ form.event_group.value }}{% else %}new{% endif %}/">
+				<img src="/media/img/edit.png" alt="edit"/>
+			</a>
+			-->
+			<a id="new-event-group" class="button" href="/add/event_group/{% if form.initial.id %}{{ form.initial.id }}{% else %}new{% endif %}/">
+				<strong>neu</strong>
+			</a>
+		</div>
+		<div class="form-field">
+			<input class="button" type="submit" value="Absenden" />
+		</div>
+	</form>
+</div>
+</div>

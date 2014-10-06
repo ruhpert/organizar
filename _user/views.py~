@@ -1,0 +1,370 @@
+from django.http import HttpResponse
+from django.core.urlresolvers import reverse
+from django.template import RequestContext, loader
+from django.http import HttpResponseRedirect
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User, Group
+from django.contrib import messages 
+from django.views.generic import RedirectView
+
+from _calendar.models import Event, Room, Event_Person_Grading
+from _calendar.forms import LoginForm, Event_Form, Not_At_Event_Form, Event_Person_Comment_Form, Event_Person_Grading_Form
+from _calendar.views import placeholder
+
+from _user.models import Person, Child_Contact, Billing_Contact
+from _user.forms import Person_Form, User_Form, Billing_Contact_Form
+from django.forms.models import formset_factory
+from django.forms.models import inlineformset_factory
+from datetime import datetime
+import logging
+import sys, os
+import traceback
+import random
+
+# GET PERSON
+def get_person_or_none(user_id=None, user=None):
+	person = None
+
+	if user_id != None:
+		try:
+			person = Person.objects.get(user=user_id)
+		except:
+			try:	
+				print user
+				person = user.person
+			except:
+				print "no person found"
+
+	return person
+
+
+# GET BILLING CONTACT
+def get_billing_contact_or_none(user_id=None, person=None):
+	billing_contact = None
+
+	if user_id != None:
+		try:
+			billing_contact = Billing_Contact.objects.get(person=user_id)
+		except:
+			try:
+				billing_contact = Billing_Contact.objects.get(person=person.id)
+			except:
+				print "no billing_contact found"
+
+	return billing_contact
+
+
+# GET USER
+def get_user_or_none(user_id=None, request=None):
+	user = None
+
+	if user_id != None:
+		try:
+			user = User.objects.get(id=user_id)
+			print "user"
+			print user
+		except:
+			try:
+				username = request.POST.get('username',None)
+				user = User.objects.get(username=username)
+			except:
+				print "second try... no user found"
+
+	return user
+
+
+# EDIT SAVE USER
+@login_required(login_url='/')
+def edit_user(request=None, user_id=None):
+
+	print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	print "~~~~~ EDIT / SAVE USER ~~~~~"
+	print "~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	form_type = "person"
+	form_person = Person_Form()
+	form = User_Form()
+	form_billing_contract = Billing_Contact_Form()
+	NEW_USER = False
+	ALL_FORMS_SAVED = True
+
+	if user_id != None and request != None:
+
+		user = get_user_or_none(user_id, request)
+		person = get_person_or_none(user_id, user)
+		billing_contact = get_billing_contact_or_none(user_id, person)
+
+		# PREPARE DEAULT
+		if user != None:
+			form = User_Form(instance=user)
+
+			if person != None:
+				form_person = Person_Form(instance=person)
+			else:
+				print "setting user"
+				form_person = Person_Form(initial={'user': user_id})
+
+			if billing_contact != None:
+				form_billing_contract = Billing_Contact_Form(instance=billing_contact)
+			else:
+				print "setting child"
+				form_billing_contract = Billing_Contact_Form(initial={'child': user_id})
+
+			
+		else:
+			NEW_USER = True
+			form = User_Form()
+
+
+		##############################
+		# POST REQUEST
+		##############################
+		if request.method == 'POST':
+			data = request.POST.copy()
+
+			##############################
+			# USER FORM 
+			##############################
+
+			if user == None:
+				form = User_Form(data=data)
+			else:
+				form = User_Form(data=data, instance=user)
+				data.__setitem__("id", user.id)
+				data.__setitem__("user", user.id)
+				data.__setitem__("user_id", user.id)
+
+				groups = request.POST.getlist('groups',None)
+
+				if groups != None:
+					user.groups.clear()
+					user.save()
+					for group in groups:
+						group = Group.objects.get(pk=group)
+						user.groups.add(group)
+					user.save()
+
+			# CHECK USER FORM
+
+			# if user is valid save form
+			if form.is_valid():
+				user = form.save()
+				print "user saved"
+
+			# if not try to create a new user
+			else:
+				print form.errors
+				print "form is not valid trying to create new user"
+				try:
+					username = request.POST.get('username',None)
+					first_name = request.POST.get('first_name',None)
+					last_name = request.POST.get('last_name',None)
+					email = request.POST.get('email',None)
+				except:
+					print "could not get user data"
+
+				if username != None and email != None:
+					password = User.objects.make_random_password()
+					user = User.objects.create_user(username, email, password)
+					user.first_name = first_name
+					user.last_name = last_name
+					user.save()
+					print "new user created"
+
+			if NEW_USER:
+				data.__setitem__("id", user.id)
+				data.__setitem__("user", user.id)
+				data.__setitem__("user_id", user.id)
+
+				groups = request.POST.getlist('groups',None)
+
+				if groups != None:
+					user.groups.clear()
+					user.save()
+					for group in groups:
+						group = Group.objects.get(pk=group)
+						user.groups.add(group)
+					user.save()
+
+				form_person = Person_Form(data=data)
+
+				if form_person.is_valid():
+					print "person is valid"
+					person = form_person.save()
+					print "person saved"
+					data.__setitem__("person", person.id) 
+					form_billing_contract = Billing_Contact_Form(data=data)
+					print form_billing_contract
+					if form_billing_contract.is_valid():
+						form_billing_contract.save()
+						print "billing form saved"
+					else:
+						print "billing form is not valid"
+						form_billing_contract = Billing_Contact_Form(data=data)
+						
+						try:
+							return HttpResponseRedirect('/calendar')
+						except:
+							"could not send redirect"
+				else:
+					print "person form is not valid"
+					form_person = Person_Form(data=data)
+
+			##############################
+			# PERSON FORM 
+			##############################
+			print data
+			if person != None:
+				form_person = Person_Form(data=data, instance=person)
+			else:
+				form_person = Person_Form(data=data)
+
+			# CHECK PERSON FORM 
+			if form_person.is_valid():
+				try:
+					person = form_person.save()
+					data.__setitem__("person", person.id)
+					print "form person saved!"
+				except:
+					print "form person is not valid"  + str(form_person.errors)
+					traceback.print_exc()
+			else:
+				form_person = Person_Form(request.POST)
+				print "form person is not valid" + str(form_person.errors)
+
+			##############################
+			# BILLING CONTACT FORM 
+			##############################
+
+			# GET BILLING CONTACT FORM 
+			if billing_contact != None:
+				form_billing_contract = Billing_Contact_Form(data=data, instance=billing_contact)
+			else:
+				form_billing_contract = Billing_Contact_Form(data=data)
+
+			# CHECK BILLING CONTACT FORM 
+			if form_billing_contract.is_valid():
+				try:
+					form_billing_contract.save()
+					print "form billing contact saved"
+				except:
+					print "form billing contact is not valid" + str(form_billing_contract.errors)
+					traceback.print_exc()
+			else:
+				form_billing_contract = Billing_Contact_Form(request.POST)
+				print "form billing contact is not valid" + str(form_billing_contract.errors)
+
+	#form_billing_contract.child = user_id
+	#form_person.user = user_id
+
+
+	#ExampleFormSet = formset_factory(User_Form, extra=0)
+	#ExampleFormSet = formset_factory(Person_Form, extra=0)
+	#form = ExampleFormSet()
+	#Person_Form_Set = inlineformset_factory(User, Person)
+	#form = Person_Form_Set(instance=user)
+	#form = Test_Form()
+
+
+
+#BookInlineFormSet = inlineformset_factory(Author, Book)
+ #   if request.method == "POST":
+#        formset = BookInlineFormSet(request.POST, request.FILES, instance=author)
+ #       if formset.is_valid():
+#            formset.save()
+#            # Do something. Should generally end with a redirect. For example:
+#            return HttpResponseRedirect(author.get_absolute_url())
+#    else:
+#        formset = BookInlineFormSet(instance=author)
+#    return render_to_response("manage_books.html", {
+#        "formset": formset,
+#    })
+	if user != None:
+		user_groups = user.groups
+	else:
+		user_groups = None
+
+	context = RequestContext(request, {
+		"person"		: person,
+		"selected_groups"	: user_groups,
+		'form'			: form,
+		"form_person"		: form_person,
+		"form_billing_contract"	: form_billing_contract,
+		"form_type" : "person",	
+	})
+
+	template = loader.get_template('base/placeholder.html')
+
+	return HttpResponse(template.render(context))
+
+
+def something():
+# SAVE
+	if True == False:
+		if request.method == 'POST':
+			if action == "save-person":
+				print "SAVING PERSON"
+				form = User_Form(request.POST)
+				form_person = Person_Form(request.POST, auto_id=True)
+			elif action == "save-grading":
+				print "SAVING GRANDING"
+				_id = request.POST.get('id','')
+				_granding = request.POST.get('grading','')
+				form = Event_Person_Grading_Form(request.POST)
+				ep = Event_Person_Grading(form)
+				print " FORM " + form.as_p()
+				print "ID " + str(_id)
+
+				form = None
+				event_person_granding = Event_Person_Grading.objects.get(pk=_id)
+				event_person_granding.grading = _granding
+				print ("GRANDING " + str(ep.grading))
+				print "found granding " + str(event_person_granding)
+				event_person_granding.save()
+			if form != None and form.is_valid():
+				form.save()
+				print "form saved"
+			else:
+				print "could not save form " + str(messages.error(request, "Error"))
+				
+
+			if form_person != None and form_person.is_valid():
+				form_person.save()
+				print "form second saved"
+			else:
+				print "could not save second form " + str(messages.error(request, "Error"))
+				traceback.print_exc()
+
+			return redirect('placeholder')
+		# COMMENT
+		elif False == False:
+			form = Event_Person_Comment_Form()
+
+		# GRADING
+		elif False == False:
+			form_action = "../save-grading/"
+			try:
+				print "ADDING USER " + str(user)
+				print "ADDING EVENT " + str(event)
+				data = {"user":user, "event":event}
+				try:
+					event_person_grading = Event_Person_Grading.objects.filter(event=event.id, user=user.id)[0]
+					print event_person_grading
+					print"FOUND GRADING"
+				except:
+					print"DID NOT FIND GRADING"
+					event_person_grading = Event_Person_Grading(user=user, event=event)
+					event_person_grading.save()
+				#event_person_grading = Event_Person_Grading.objects.get(person=user, event=event)
+				form = Event_Person_Grading_Form(instance=event_person_grading)
+				print form.as_p()
+			except Exception, e:
+				form = Event_Person_Grading_Form()
+				print "RETURNING EMPTY FORM" + str(messages.error(request, "Error"))
+				traceback.print_exc()
+		else:
+			form_action = "../save-person/"
+			form = User_Form()
+			form_person = Person_Form()
